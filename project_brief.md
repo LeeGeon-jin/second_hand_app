@@ -60,3 +60,6 @@
 - Message: _id, chat (_id of Chat), sender (_id of User), content, type (text, image), createdAt
 - Rating: _id, rater (_id of User), ratee (_id of User), productId (_id of Product), score, comment, createdAt
 - Report: _id, reporter (_id of User), reportedItemType (user/product/chat), reportedItemId, reason, status (pending/resolved/rejected), createdAt
+
+node --version
+npm --version
