@@ -182,7 +182,7 @@ const MobileHome: React.FC = () => {
             className="mh-footer-item"
             onClick={() => {
               if (!isLoggedIn) goLogin();
-              else Toast.show({ content: '消息' });
+              else window.location.href = '/messages';
             }}
           >消息</div>
           <div
