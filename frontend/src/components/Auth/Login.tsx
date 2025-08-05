@@ -75,20 +75,20 @@ const Login: React.FC = () => {
     setLoading(true);
     try {
       // 支持用户名/手机号/邮箱登录
-      const res = await axios.post('/api/user/login', {
-        identifier: values.username,
+      const res = await axios.post('/api/users/login', {
+        username: values.username,
         password: values.password,
       });
       const data = res.data as LoginRes;
-      if (data && data.success) {
+      if (data && data.token) {
         // 登录成功，保存用户数据并跳转
         localStorage.setItem('token', data.token || '');
         localStorage.setItem('user', JSON.stringify(data.user));
         message.success('登录成功');
         navigate(data.redirect || '/');
-      } else if (data && data.error === 'not_found') {
+      } else if (data && data.message === '用户不存在') {
         message.error('该用户不存在');
-      } else if (data && data.error === 'wrong_password') {
+      } else if (data && data.message === '密码错误') {
         message.error('密码错误');
       } else {
         message.error('登录失败，请重试');

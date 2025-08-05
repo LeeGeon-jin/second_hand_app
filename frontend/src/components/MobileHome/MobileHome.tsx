@@ -3,6 +3,9 @@ import { SearchBar, Tabs, Divider, Toast, Popup, Button, Badge } from 'antd-mobi
 import ProductFormMobile from '../ProductForm/ProductFormMobile';
 import api from '../../api';
 import { LeftOutline, DownOutline, HeartOutline, HeartFill } from 'antd-mobile-icons';
+import { useNavigate } from 'react-router-dom';
+import MobileFooter from './MobileFooter';
+import './MobileFooter.css';
 // 示例分类，可后端动态获取
 const defaultCategories = [
   '推荐', '家具', '电器', '电子', '文具', '服饰', '运动', '母婴', '美妆', '乐器', '图书', '宠物', '更多'
@@ -10,8 +13,9 @@ const defaultCategories = [
 
 const MobileHome: React.FC = () => {
   // 跳转到登录页
+  const navigate = useNavigate();
   const goLogin = () => {
-    window.location.href = '/login';
+    navigate('/login');
   };
   const [categories, setCategories] = useState<string[]>(defaultCategories);
   const [activeCat, setActiveCat] = useState<string>('推荐');
@@ -72,6 +76,12 @@ const MobileHome: React.FC = () => {
   useEffect(() => {
     // TODO: 替换为真实API
     setProducts([]);
+  }, []);
+
+  React.useEffect(() => {
+    const handler = () => setShowPost(true);
+    window.addEventListener('showPostPopup', handler);
+    return () => window.removeEventListener('showPostPopup', handler);
   }, []);
 
   return (
@@ -169,38 +179,8 @@ const MobileHome: React.FC = () => {
           })}
         </div>
         {/* Footer 导航栏 */}
-        <div className="mh-footer">
-          <div className="mh-footer-item active">首页</div>
-          <div
-            className="mh-footer-item mh-footer-add"
-            onClick={() => {
-              if (!isLoggedIn) goLogin();
-              else setShowPost(true);
-            }}
-          >+</div>
-          <div
-            className="mh-footer-item"
-            onClick={() => {
-              if (!isLoggedIn) goLogin();
-              else Toast.show({ content: '消息' });
-            }}
-          >消息</div>
-          <div
-            className="mh-footer-item"
-            onClick={() => {
-              if (!isLoggedIn) goLogin();
-              else Toast.show({ content: '我' });
-            }}
-          >我</div>
-        </div>
-        <Popup
-          visible={showPost}
-          onMaskClick={() => setShowPost(false)}
-          position="bottom"
-          bodyStyle={{ borderTopLeftRadius: 16, borderTopRightRadius: 16, minHeight: '60vh' }}
-        >
-          <ProductFormMobile />
-        </Popup>
+        <MobileFooter />
+        {/* 发帖弹窗已由 App.tsx 全局管理 */}
       </div>
     </>
   );

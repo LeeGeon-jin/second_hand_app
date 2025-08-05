@@ -23,7 +23,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/admin', adminRoutes);
 
 // 数据库连接（请替换为你的MongoDB连接字符串）
-mongoose.connect('mongodb://localhost:27017/secondhand', { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect('mongodb+srv://liqianchen1211:19981211@cluster0.cvpanxm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0', { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
 
