@@ -1,3 +1,4 @@
+
 // 用户相关API路由
 const express = require('express');
 const bcrypt = require('bcryptjs');
@@ -5,6 +6,14 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
 const router = express.Router();
+
+// 用户名唯一性校验
+router.get('/check-username', async (req, res) => {
+  const { username } = req.query;
+  if (!username) return res.json({ exists: false });
+  const exist = await User.findOne({ username });
+  res.json({ exists: !!exist });
+});
 
 // 注册
 router.post('/register', async (req, res) => {
