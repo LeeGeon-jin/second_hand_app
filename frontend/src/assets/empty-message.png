@@ -1,0 +1,3 @@
+// 空消息占位图标，推荐用更合适的图片替换
+import emptyPng from './empty-message.png';
+export default emptyPng;
