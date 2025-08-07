@@ -20,10 +20,10 @@ const MobileFooter: React.FC = () => {
         }}
       >+</div>
       <div
-        className={`mh-footer-item${location.pathname === '/message' ? ' active' : ''}`}
+        className={`mh-footer-item${location.pathname === '/messages' ? ' active' : ''}`}
         onClick={() => {
           if (!isLoggedIn) navigate('/login');
-          else navigate('/message');
+          else navigate('/messages');
         }}
       >消息</div>
       <div

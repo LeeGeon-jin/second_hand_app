@@ -3,6 +3,9 @@
   background: #fff;
   min-height: 100vh;
   padding-bottom: 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 .mh-header {
   position: sticky;
@@ -88,6 +91,10 @@
 }
 .mh-list {
   padding: 8px 8px 0 8px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 .mh-card {
   background: #fff;
@@ -95,6 +102,9 @@
   
   margin-bottom: 16px;
   overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 .mh-card-img-wrap {
   width: 100%;
@@ -117,6 +127,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+    text-align: center;
 }
 .mh-card-bottom {
   display: flex;
@@ -165,6 +176,7 @@
   z-index: 100;
   padding: 0 60px;
   box-sizing: border-box;
+    text-align: center;
 }
 .mh-footer-item {
   flex: 1;
@@ -174,6 +186,7 @@
   line-height: 56px;
   cursor: pointer;
   user-select: none;
+    text-align: center;
 }
 .mh-footer-item.active {
   color: #222;

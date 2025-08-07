@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { SearchBar, Tabs, Divider, Toast, Popup, Button, Badge } from 'antd-mobile';
-import ProductFormMobile from '../ProductForm/ProductFormMobile';
+
 import api from '../../api';
 import { LeftOutline, DownOutline, HeartOutline, HeartFill } from 'antd-mobile-icons';
 import { useNavigate } from 'react-router-dom';
@@ -178,6 +178,7 @@ const MobileHome: React.FC = () => {
             );
           })}
         </div>
+
         {/* Footer 导航栏 */}
         <MobileFooter />
         {/* 发帖弹窗已由 App.tsx 全局管理 */}
