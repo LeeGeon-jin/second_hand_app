@@ -22,8 +22,9 @@ app.use('/api/ratings', ratingRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/admin', adminRoutes);
 
-// 数据库连接（请替换为你的MongoDB连接字符串）
-mongoose.connect('mongodb://localhost:27017/secondhand', { useNewUrlParser: true, useUnifiedTopology: true })
+// 数据库连接（使用环境变量）
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/secondhand';
+mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
 
