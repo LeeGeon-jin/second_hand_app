@@ -1,0 +1,7 @@
+[33m204a63d[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m)[m fix: 修复TypeScript错误并完善GoDaddy部署配置
+[33ma51e7cf[m feat: 添加AI估价功能、PowerShell脚本和完整项目文档
+[33ma4576a8[m feat: 前端UI优化与bug修复，消息页面与首页适配移动端居中，修复图片与接口问题
+[33m1882134[m feat: 全面修复前端底部导航通用、发帖弹窗全局、注册登录流程、样式与交互问题
+[33mcc7180c[m[33m ([m[1;31morigin/feature/chat-system[m[33m)[m feat: 添加消息列表和聊天窗口页面组件
+[33m9d7dc2b[m feat: 添加消息功能和移动端主页
+[33mdf50b84[m 项目初始备份

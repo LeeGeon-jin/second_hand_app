@@ -4,6 +4,12 @@
 
 ## 🚀 快速开始
 
+### 🔒 首次设置（团队成员）
+```powershell
+# 配置环境变量
+.\setup-env.ps1
+```
+
 ### 一键启动开发环境
 ```powershell
 .\start-dev.ps1
@@ -97,3 +103,21 @@ npm run dev
 2. 确保MongoDB连接正常
 3. 如果端口被占用，脚本会自动选择其他端口
 4. 使用`clean-dev.ps1`可以解决大部分端口冲突问题
+
+## 🔐 安全配置
+
+### 环境变量保护
+- 项目使用环境变量保护敏感信息（MongoDB URI、JWT密钥等）
+- 新团队成员请运行 `.\setup-env.ps1` 配置本地环境
+- 详细安全配置请查看 [SECURITY.md](./SECURITY.md)
+
+### Git历史安全
+- 运行 `.\check-git-history.ps1` 检查Git历史中的敏感信息
+- 如果发现敏感信息泄漏，立即按照 [SECURITY.md](./SECURITY.md) 中的步骤处理
+- 项目已配置pre-commit hooks防止敏感信息提交
+
+### 团队协作
+- 敏感信息通过安全渠道分享
+- 定期更新密码和密钥
+- 不要将 `.env` 文件提交到版本控制
+- 定期运行安全检查脚本
