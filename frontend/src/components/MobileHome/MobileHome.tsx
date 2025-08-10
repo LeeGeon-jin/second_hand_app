@@ -6,6 +6,8 @@ import { LeftOutline, DownOutline, HeartOutline, HeartFill } from 'antd-mobile-i
 import { useNavigate } from 'react-router-dom';
 import MobileFooter from './MobileFooter';
 import './MobileFooter.css';
+import './MobileHome.css';
+
 // 示例分类，可后端动态获取
 const defaultCategories = [
   '推荐', '家具', '电器', '电子', '文具', '服饰', '运动', '母婴', '美妆', '乐器', '图书', '宠物', '更多'
@@ -35,6 +37,9 @@ const MobileHome: React.FC = () => {
     const matchSearch = !search || item.title?.includes(search) || item.description?.includes(search);
     return matchCat && matchSearch;
   });
+
+  // 如果当前分类没有商品，保持空列表（显示"暂无商品"）
+  // 只有在"推荐"分类下才显示所有商品
 
   // 推荐页排序逻辑
   if (activeCat === '推荐') {
@@ -72,10 +77,20 @@ const MobileHome: React.FC = () => {
     ));
   };
 
-  // 获取商品（示例）
+  // 获取商品
   useEffect(() => {
-    // TODO: 替换为真实API
-    setProducts([]);
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch('/api/products');
+        const data = await response.json();
+        setProducts(data);
+      } catch (error) {
+        console.error('获取商品失败:', error);
+        setProducts([]);
+      }
+    };
+    
+    fetchProducts();
   }, []);
 
   React.useEffect(() => {
@@ -84,12 +99,37 @@ const MobileHome: React.FC = () => {
     return () => window.removeEventListener('showPostPopup', handler);
   }, []);
 
+  // 监听商品发布事件，刷新商品列表
+  React.useEffect(() => {
+    const handler = () => {
+      // 重新获取商品列表
+      const fetchProducts = async () => {
+        try {
+          const response = await fetch('/api/products');
+          const data = await response.json();
+          setProducts(data);
+        } catch (error) {
+          console.error('获取商品失败:', error);
+        }
+      };
+      fetchProducts();
+    };
+    
+    window.addEventListener('product-posted', handler);
+    return () => window.removeEventListener('product-posted', handler);
+  }, []);
+
+  // 格式化价格
+  const formatPrice = (price: number) => {
+    return `$${price.toFixed(2)}`;
+  };
+
   return (
     <>
       <div className="mobile-home">
         {/* Header 搜索栏 */}
-        <div style={{ width: '100%', display: 'flex', justifyContent: 'center', margin: '16px 0 8px 0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', background: '#f5f6f7', borderRadius: 24, padding: '0 8px', height: 40, width: '80%', maxWidth: 420 }}>
+        <div className="mh-header">
+          <div className={`mh-search-bar${focus ? ' focused' : ''}`}>
             <svg width="20" height="20" viewBox="0 0 20 20" style={{ marginLeft: 8, marginRight: 4 }}><circle cx="9" cy="9" r="7" stroke="#bbb" strokeWidth="2" fill="none"/><line x1="15" y1="15" x2="19" y2="19" stroke="#bbb" strokeWidth="2"/></svg>
             <input
               value={search}
@@ -109,10 +149,12 @@ const MobileHome: React.FC = () => {
               onKeyDown={e => { if (e.key === 'Enter') Toast.show({ content: `搜索：${search}` }); }}
             />
           </div>
-          <span
+          <button
+            className="mh-search-btn"
             onClick={() => Toast.show({ content: `搜索：${search}` })}
-            style={{ fontWeight: 700, color: '#222', fontSize: 20, margin: '0 12px', cursor: 'pointer', whiteSpace: 'nowrap' }}
-          >搜索</span>
+          >
+            搜索
+          </button>
         </div>
         <Divider style={{ margin: '8px 0 0 0', borderColor: '#eee' }} />
         {/* 分类Tab横滑 */}
@@ -151,19 +193,31 @@ const MobileHome: React.FC = () => {
         </Popup>
         {/* 商品列表 */}
         <div className="mh-list">
-          {filteredProducts.length === 0 && <div style={{textAlign:'center',color:'#bbb',marginTop:40}}>暂无商品</div>}
+          {filteredProducts.length === 0 && (
+            <div style={{
+              gridColumn: '1 / -1',
+              textAlign: 'center',
+              color: '#bbb',
+              marginTop: 40,
+              fontSize: 16
+            }}>
+              {activeCat === '推荐' ? '暂无商品' : `${activeCat}分类暂无商品`}
+            </div>
+          )}
           {filteredProducts.map(item => {
             const img = item.image || (item.images && item.images[0]) || '';
             const title = item.title || '';
             const user = item.user || {};
             const avatar = user.avatar || '';
             const name = user.name || '';
+            const price = item.price || 0;
             return (
               <div className="mh-card" key={item.id || item._id || Math.random()}>
                 <div className="mh-card-img-wrap" onClick={() => Toast.show({ content: '进入详情' })}>
                   <img className="mh-card-img" src={img} alt={title} />
                 </div>
                 <div className="mh-card-title" onClick={() => Toast.show({ content: '进入详情' })}>{title}</div>
+                <div className="mh-card-price">{formatPrice(price)}</div>
                 <div className="mh-card-bottom">
                   <div className="mh-card-user" onClick={() => Toast.show({ content: '用户信息' })}>
                     <img className="mh-card-avatar" src={avatar} alt={name} />

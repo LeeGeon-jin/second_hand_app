@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './components/MobileHome/MobileHome.css';
-import MobileHome from './components/MobileHome/MobileHome';
-import MessageList from './pages/MessageList';
-import ChatWindow from './pages/ChatWindow';
-import Login from './components/Auth/Login';
-import Register from './components/Auth/Register';
+import MobileHome from './components/MobileHome/MobileHome.tsx';
+import MessageList from './pages/MessageList.tsx';
+import ChatWindow from './pages/ChatWindow.tsx';
+import Login from './components/Auth/Login.tsx';
+import Register from './components/Auth/Register.tsx';
 import UserProfile from './components/Profile/UserProfile.tsx';
-import ProductFormMobile from './components/ProductForm/ProductFormMobile';
+import ProductFormMobile from './components/ProductForm/ProductFormMobile.tsx';
 import { Popup } from 'antd-mobile';
 
 const App: React.FC = () => {
