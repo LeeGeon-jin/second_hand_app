@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { SearchBar, Tabs, Divider, Toast, Popup, Button, Badge } from 'antd-mobile';
+import { Divider, Toast, Popup } from 'antd-mobile';
 
-import api from '../../api';
-import { LeftOutline, DownOutline, HeartOutline, HeartFill } from 'antd-mobile-icons';
+// import api from '../../api';
+import { DownOutline, HeartOutline, HeartFill } from 'antd-mobile-icons';
 import { useNavigate } from 'react-router-dom';
 import MobileFooter from './MobileFooter';
 import './MobileFooter.css';
@@ -19,7 +19,7 @@ const MobileHome: React.FC = () => {
   const goLogin = () => {
     navigate('/login');
   };
-  const [categories, setCategories] = useState<string[]>(defaultCategories);
+  const [categories] = useState<string[]>(defaultCategories);
   const [activeCat, setActiveCat] = useState<string>('推荐');
   const [showAllCats, setShowAllCats] = useState(false);
   const [search, setSearch] = useState('');

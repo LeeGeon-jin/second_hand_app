@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Form, Input, Button, message, Checkbox, Tabs } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -204,7 +204,7 @@ const Login: React.FC = () => {
                         return;
                       }
                       // 只传手机号，不传图形验证码
-                      const res = await api.post('/users/send-code', {
+                      await api.post('/users/send-code', {
                         phone
                       });
                       message.success('验证码已发送');

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Input, Button, List } from 'antd';
+import { Card, Input, List } from 'antd';
 
 const messages = [
   { id: 1, sender: '我', content: '你好！' },

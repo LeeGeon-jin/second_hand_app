@@ -73,7 +73,7 @@ const Avatar = styled.img`
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  margin: ${props => props.isMine ? '0 0 0 8px' : '0 8px 0 0'};
+  margin: ${(props: any) => props.isMine ? '0 0 0 8px' : '0 8px 0 0'};
 `;
 
 const MessageContent = styled.div<{ isMine: boolean }>`
@@ -144,7 +144,7 @@ const ChatWindow: React.FC = () => {
   const fetchMessages = async () => {
     try {
       const response = await axios.get(`/api/chat/${chatId}/messages`);
-      setMessages(response.data);
+      setMessages(response.data as Message[]);
     } catch (error) {
       console.error('获取消息失败:', error);
     }
@@ -153,7 +153,7 @@ const ChatWindow: React.FC = () => {
   const fetchChatInfo = async () => {
     try {
       const response = await axios.get(`/api/chat/${chatId}`);
-      setChatInfo(response.data);
+      setChatInfo(response.data as ChatInfo);
     } catch (error) {
       console.error('获取聊天信息失败:', error);
     }
@@ -174,7 +174,7 @@ const ChatWindow: React.FC = () => {
         type: 'text'
       });
       
-      setMessages(prev => [...prev, response.data]);
+      setMessages(prev => [...prev, response.data as Message]);
       setInput('');
     } catch (error) {
       console.error('发送消息失败:', error);

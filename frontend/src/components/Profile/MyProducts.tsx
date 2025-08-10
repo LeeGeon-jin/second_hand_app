@@ -13,7 +13,7 @@ const MyProducts: React.FC = () => {
         const res = await api.get('/users/me', {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
-        setProducts(res.data.postedProducts || []);
+        setProducts((res.data as any).postedProducts || []);
       } catch {
         message.error('获取我的商品失败');
       }

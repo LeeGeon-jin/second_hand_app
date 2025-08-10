@@ -79,7 +79,7 @@ const ProductImageUploader: React.FC<ProductImageUploaderProps> = ({ value = [],
           console.log('ImageUploader onChange 被调用，items:', items);
           const urls = items.map(i => {
             // 优先使用thumbUrl，如果没有则使用url
-            const imageUrl = i.thumbUrl || i.url;
+            const imageUrl = (i as any).thumbUrl || i.url;
             console.log('处理图片项:', i, '使用URL:', imageUrl);
             return imageUrl;
           });
