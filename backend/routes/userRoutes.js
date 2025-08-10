@@ -17,12 +17,18 @@ router.get('/check-username', async (req, res) => {
 
 // 注册
 router.post('/register', async (req, res) => {
-  const { username, password, email, phone } = req.body;
+  const { username, password, email, phone, location } = req.body;
   if (!username || !password) return res.status(400).json({ message: '用户名和密码必填' });
   const exist = await User.findOne({ username });
   if (exist) return res.status(400).json({ message: '用户名已存在' });
   const hash = await bcrypt.hash(password, 10);
-  const user = new User({ username, passwordHash: hash, email, phone });
+  
+  const userData = { username, passwordHash: hash, email, phone };
+  if (location) {
+    userData.location = location;
+  }
+  
+  const user = new User(userData);
   await user.save();
   res.json({ message: '注册成功' });
 });
@@ -43,5 +49,27 @@ router.get('/me', auth, async (req, res) => {
   const user = await User.findById(req.user.id).select('-passwordHash');
   res.json(user);
 });
+
+  // 更新用户信息
+  router.put('/me', auth, async (req, res) => {
+    try {
+      const { location } = req.body;
+      const updateData = {};
+      
+      if (location) {
+        updateData.location = location;
+      }
+      
+      const user = await User.findByIdAndUpdate(
+        req.user.id, 
+        updateData,
+        { new: true }
+      ).select('-passwordHash');
+      
+      res.json(user);
+    } catch (error) {
+      res.status(500).json({ message: '更新失败' });
+    }
+  });
 
 module.exports = router;

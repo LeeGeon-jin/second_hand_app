@@ -3,38 +3,55 @@
   background: #fff;
   min-height: 100vh;
   padding-bottom: 60px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
+
 .mh-header {
   position: sticky;
   top: 0;
   background: #fff;
   z-index: 10;
   padding: 12px 12px 0 12px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
 }
+
 .mh-search-bar {
   display: flex;
   align-items: center;
-  background: #f2f3f5;
+  background: #f5f6f7;
   border-radius: 24px;
   padding: 4px 8px 4px 12px;
   font-size: 18px;
   transition: box-shadow 0.2s;
+  width: 70%;
+  max-width: 360px;
+  height: 40px;
 }
+
 .mh-search-bar.focused {
-  
+  box-shadow: 0 0 0 2px rgba(255, 49, 65, 0.2);
 }
+
 .mh-search-btn {
   background: none;
   border: none;
   color: #222;
   font-size: 18px;
-  margin-left: 8px;
   padding: 0 8px;
   cursor: pointer;
+  font-weight: 700;
+  white-space: nowrap;
+  height: 40px;
+  display: flex;
+  align-items: center;
 }
+
 .mh-cat-bar {
   display: flex;
   overflow-x: auto;
@@ -43,9 +60,11 @@
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
+
 .mh-cat-bar::-webkit-scrollbar {
   display: none;
 }
+
 .mh-cat-item {
   display: inline-block;
   padding: 0 16px;
@@ -55,10 +74,12 @@
   transition: color 0.2s;
   line-height: 32px;
 }
+
 .mh-cat-item.active {
   color: #222;
   font-weight: 600;
 }
+
 .mh-cat-arrow {
   display: inline-flex;
   align-items: center;
@@ -67,12 +88,14 @@
   font-size: 18px;
   cursor: pointer;
 }
+
 .mh-cat-popup {
   display: flex;
   flex-wrap: wrap;
   padding: 16px 8px 24px 8px;
   background: #fff;
 }
+
 .mh-cat-popup-item {
   width: 25%;
   text-align: center;
@@ -84,28 +107,37 @@
   margin-bottom: 8px;
   transition: background 0.2s, color 0.2s;
 }
+
 .mh-cat-popup-item.active {
   color: #222;
   background: #f2f3f5;
   font-weight: 600;
 }
+
+/* 商品列表 - 瀑布流布局（每行2个） */
 .mh-list {
-  padding: 8px 8px 0 8px;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  padding: 16px;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-height: 200px; /* 确保即使没有商品也有最小高度 */
 }
+
+/* 商品卡片 */
 .mh-card {
   background: #fff;
   border-radius: 12px;
-  
   margin-bottom: 16px;
   overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
+
 .mh-card-img-wrap {
   width: 100%;
   aspect-ratio: 1/1;
@@ -113,12 +145,32 @@
   overflow: hidden;
   position: relative;
 }
+
 .mh-card-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
 }
+
+/* 图片占位符 */
+.mh-card-img-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+  color: #adb5bd;
+  font-size: 12px;
+}
+
+.mh-card-img-placeholder svg {
+  width: 32px;
+  height: 32px;
+  margin-bottom: 8px;
+}
+
 .mh-card-title {
   font-size: 16px;
   color: #222;
@@ -127,29 +179,43 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-    text-align: center;
+  text-align: center;
 }
+
+.mh-card-price {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ff3141;
+  margin: 4px 0;
+  text-align: center;
+}
+
 .mh-card-bottom {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 8px 12px 8px 12px;
+  width: 100%;
 }
+
 .mh-card-user {
   display: flex;
   align-items: center;
   cursor: pointer;
 }
+
 .mh-card-avatar {
   width: 24px;
   height: 24px;
   border-radius: 50%;
   margin-right: 6px;
 }
+
 .mh-card-nick {
   font-size: 14px;
   color: #666;
 }
+
 .mh-card-like {
   display: flex;
   align-items: center;
@@ -157,11 +223,38 @@
   font-size: 16px;
   cursor: pointer;
 }
+
 .mh-card-like-count {
   margin-left: 2px;
   color: #888;
   font-size: 14px;
 }
+
+/* 空状态 */
+.mh-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 60px 20px;
+  color: #999;
+}
+
+.mh-empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.mh-empty-text {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.mh-empty-subtext {
+  font-size: 14px;
+  color: #bbb;
+}
+
+/* 底部导航栏 - 保持原样 */
 .mh-footer {
   position: fixed;
   left: 0;
@@ -176,8 +269,9 @@
   z-index: 100;
   padding: 0 60px;
   box-sizing: border-box;
-    text-align: center;
+  text-align: center;
 }
+
 .mh-footer-item {
   flex: 1;
   text-align: center;
@@ -186,12 +280,15 @@
   line-height: 56px;
   cursor: pointer;
   user-select: none;
-    text-align: center;
+  text-align: center;
 }
+
 .mh-footer-item.active {
   color: #222;
   font-weight: 600;
 }
+
+/* 发布按钮 - 保持原样 */
 .mh-footer-add {
   position: fixed;
   left: 50%;
@@ -206,6 +303,5 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  
   z-index: 101;
 }

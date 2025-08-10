@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from 'react';
-import { Form, Input, Button, message } from 'antd';
+import { Form, Input, Button, message, Select, Space } from 'antd';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
@@ -30,6 +30,19 @@ const Register: React.FC = () => {
   const [form] = Form.useForm();
   const [checking, setChecking] = useState(false);
   const navigate = useNavigate();
+
+  // 州/领地选项
+  const stateOptions = [
+    { label: '新南威尔士州', value: 'NSW' },
+    { label: '维多利亚州', value: 'VIC' },
+    { label: '昆士兰州', value: 'QLD' },
+    { label: '西澳大利亚州', value: 'WA' },
+    { label: '南澳大利亚州', value: 'SA' },
+    { label: '塔斯马尼亚州', value: 'TAS' },
+    { label: '澳大利亚首都领地', value: 'ACT' },
+    { label: '北领地', value: 'NT' },
+    { label: '新西兰', value: 'New Zealand' },
+  ];
 
   // 用户名唯一性校验（失去焦点+防抖）
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -72,6 +85,10 @@ const Register: React.FC = () => {
         username: values.username,
         password: values.password,
         email: values.email,
+        location: values.suburb && values.state ? {
+          city: values.suburb,
+          district: values.state
+        } : undefined
       });
       message.success('注册完成，请登录');
       setTimeout(() => navigate('/login'), 1000);
@@ -135,6 +152,34 @@ const Register: React.FC = () => {
         >
           <Input style={inputStyle} placeholder="电子邮箱" size="large" autoComplete="off" />
         </Form.Item>
+        
+        {/* 地址信息（可选） */}
+        <div style={{ marginBottom: 32 }}>
+          <div style={{ fontSize: 16, color: '#333', marginBottom: 16 }}>
+            地址信息（可选）
+            <span style={{ fontSize: 14, color: '#666', marginLeft: 8 }}>
+              💡 用于商品发布时自动填充
+            </span>
+          </div>
+          <Space direction="vertical" style={{ width: '100%' }}>
+            <Form.Item name="suburb" style={{ marginBottom: 16 }}>
+              <Input 
+                style={inputStyle} 
+                placeholder="所在城区（如：Bondi, Strathfield等）" 
+                size="large" 
+              />
+            </Form.Item>
+            <Form.Item name="state" style={{ marginBottom: 16 }}>
+              <Select
+                style={{ ...inputStyle, marginBottom: 0 }}
+                placeholder="选择州/领地"
+                options={stateOptions}
+                size="large"
+              />
+            </Form.Item>
+          </Space>
+        </div>
+        
         <Form.Item>
           <Button type="primary" htmlType="submit" block style={buttonStyle} disabled={checking}>
             注册
