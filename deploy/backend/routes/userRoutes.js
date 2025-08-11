@@ -40,7 +40,10 @@ router.post('/login', async (req, res) => {
   if (!user) return res.status(400).json({ message: '用户不存在' });
   const valid = await bcrypt.compare(password, user.passwordHash);
   if (!valid) return res.status(400).json({ message: '密码错误' });
-  const token = jwt.sign({ id: user._id, username: user.username }, process.env.JWT_SECRET || 'secret', { expiresIn: '7d' });
+          if (!process.env.JWT_SECRET) {
+          return res.status(500).json({ message: '服务器配置错误' });
+        }
+        const token = jwt.sign({ id: user._id, username: user.username }, process.env.JWT_SECRET, { expiresIn: '7d' });
   res.json({ token, user: { id: user._id, username: user.username } });
 });
 

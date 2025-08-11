@@ -10,7 +10,7 @@ import './MobileHome.css';
 
 // 示例分类，可后端动态获取
 const defaultCategories = [
-  '推荐', '家具', '电器', '电子', '文具', '服饰', '运动', '母婴', '美妆', '乐器', '图书', '宠物', '更多'
+  '推荐', '家具', '电器', '电子产品', '文具', '服饰', '运动', '母婴', '美妆', '乐器', '图书', '宠物', '更多'
 ];
 
 const MobileHome: React.FC = () => {
@@ -81,7 +81,7 @@ const MobileHome: React.FC = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch('/api/products');
+        const response = await fetch('https://secondhand-production.up.railway.app/api/products');
         const data = await response.json();
         setProducts(data);
       } catch (error) {
@@ -105,7 +105,7 @@ const MobileHome: React.FC = () => {
       // 重新获取商品列表
       const fetchProducts = async () => {
         try {
-          const response = await fetch('/api/products');
+          const response = await fetch('https://secondhand-production.up.railway.app/api/products');
           const data = await response.json();
           setProducts(data);
         } catch (error) {
@@ -205,7 +205,11 @@ const MobileHome: React.FC = () => {
             </div>
           )}
           {filteredProducts.map(item => {
-            const img = item.image || (item.images && item.images[0]) || '';
+            let img = item.image || (item.images && item.images[0]) || '';
+            // 如果是相对路径，添加后端URL
+            if (img && img.startsWith('/api/')) {
+              img = 'https://secondhand-production.up.railway.app' + img;
+            }
             const title = item.title || '';
             const user = item.user || {};
             const avatar = user.avatar || '';

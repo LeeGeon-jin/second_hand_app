@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { List, Spin, message } from 'antd';
-import axios from 'axios';
 import ProductCard from './ProductCard';
+import api from '../../api';
 
 interface Product {
   _id: string;
@@ -15,7 +15,7 @@ const ProductList: React.FC = () => {
 
   useEffect(() => {
     setLoading(true);
-    axios.get<Product[]>('http://localhost:5000/api/products')
+    api.get<Product[]>('/products')
       .then(res => setProducts(res.data))
       .catch(() => message.error('获取商品失败'))
       .then(() => setLoading(false));

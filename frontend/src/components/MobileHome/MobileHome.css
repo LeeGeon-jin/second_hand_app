@@ -118,9 +118,8 @@
 .mh-list {
   padding: 16px;
   width: 100%;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  column-count: 2;
+  column-gap: 12px;
   max-width: 100%;
   box-sizing: border-box;
   min-height: 200px; /* 确保即使没有商品也有最小高度 */
@@ -130,17 +129,19 @@
 .mh-card {
   background: #fff;
   border-radius: 12px;
-  margin-bottom: 16px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  height: auto;
+  width: 100%;
+  break-inside: avoid;
+  margin-bottom: 12px;
 }
 
 .mh-card-img-wrap {
   width: 100%;
-  aspect-ratio: 1/1;
   background: #f2f3f5;
   overflow: hidden;
   position: relative;
@@ -148,15 +149,14 @@
 
 .mh-card-img {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
   display: block;
 }
 
 /* 图片占位符 */
 .mh-card-img-placeholder {
   width: 100%;
-  height: 100%;
+  min-height: 200px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -180,6 +180,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
   text-align: center;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .mh-card-price {

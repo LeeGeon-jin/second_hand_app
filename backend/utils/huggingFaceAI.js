@@ -83,20 +83,22 @@ function getLocalPriceRange(category, estimatedPrice) {
   const min = Math.max(5, Math.round(estimatedPrice * 0.7));
   const max = Math.round(estimatedPrice * 1.3);
 
-  // 类别特定范围限制
+  // 类别特定范围限制（澳元价格）
   const categoryRanges = {
     '家具': { min: 20, max: 500 },
     '电器': { min: 30, max: 800 },
-    '电子': { min: 50, max: 2000 },
+    '电子产品': { min: 50, max: 3000 },
     '文具': { min: 5, max: 100 },
-    '服饰': { min: 10, max: 200 },
+    '服饰': { min: 10, max: 500 },
+    '服装鞋帽': { min: 10, max: 500 },
     '运动': { min: 15, max: 300 },
     '母婴': { min: 10, max: 200 },
     '美妆': { min: 5, max: 100 },
     '乐器': { min: 30, max: 1000 },
     '图书': { min: 5, max: 50 },
     '宠物': { min: 10, max: 200 },
-    '其他': { min: 5, max: 300 }
+    '家居用品': { min: 20, max: 1000 },
+    '其他': { min: 5, max: 500 }
   };
 
   const range = categoryRanges[category] || { min: 5, max: 300 };
@@ -134,13 +136,15 @@ async function estimatePriceWithHF(title, category, description, images) {
     }
 
     // 构建AI提示词
-    const prompt = `作为二手商品估价专家，请分析以下商品：
+    const prompt = `作为澳洲二手商品估价专家，请分析以下商品：
 
 商品标题：${title}
 商品类别：${category}
 商品描述：${description}
 
-请基于澳洲二手市场价格，提供估价建议。请返回JSON格式：
+请基于澳洲二手市场价格，提供估价建议。所有价格必须以澳元(AUD)为单位。
+
+请返回JSON格式：
 {
   "estimatedPrice": 数字,
   "priceRange": {"min": 数字, "max": 数字},
@@ -148,12 +152,12 @@ async function estimatePriceWithHF(title, category, description, images) {
   "reasoning": "估价理由"
 }
 
-价格单位为澳元，估价要合理。`;
+注意：价格单位为澳元(AUD)，估价要符合澳洲市场实际情况。`;
 
     // 尝试使用Hugging Face API
     const hfToken = process.env.HUGGING_FACE_TOKEN;
     
-    if (hfToken && hfToken !== 'your_hf_token_here') {
+    if (hfToken) {
       try {
         console.log('🤖 尝试使用Hugging Face AI...');
         const response = await axios.post(

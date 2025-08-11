@@ -153,7 +153,7 @@ async function estimatePriceWithHF(title, category, description, images) {
     // 尝试使用Hugging Face API
     const hfToken = process.env.HUGGING_FACE_TOKEN;
     
-    if (hfToken && hfToken !== 'your_hf_token_here') {
+    if (hfToken) {
       try {
         console.log('🤖 尝试使用Hugging Face AI...');
         const response = await axios.post(
