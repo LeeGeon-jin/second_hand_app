@@ -160,13 +160,69 @@ router.put('/:id', auth, async (req, res) => {
   }
 });
 
-// 删除商品（需登录，且为本人）
+// 删除商品（需登录，且为本人）- 自主下架删除数据
 router.delete('/:id', auth, async (req, res) => {
-  const product = await Product.findById(req.params.id);
-  if (!product) return res.status(404).json({ message: '商品不存在' });
-  if (product.seller.toString() !== req.user.id) return res.status(403).json({ message: '无权删除' });
-  await product.deleteOne();
-  res.json({ message: '删除成功' });
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ message: '商品不存在' });
+    if (product.seller.toString() !== req.user.id) return res.status(403).json({ message: '无权删除' });
+    
+    // 检查是否有进行中的交易
+    if (product.status === 'pending_completion') {
+      return res.status(400).json({ message: '有进行中的交易，无法删除商品' });
+    }
+    
+    // 如果是已售出的商品，不能删除（保留交易记录）
+    if (product.status === 'sold') {
+      return res.status(400).json({ message: '已售出的商品不能删除，交易记录需要保留' });
+    }
+    
+    await product.deleteOne();
+    res.json({ message: '商品已删除' });
+  } catch (error) {
+    console.error('删除商品失败:', error);
+    res.status(500).json({ message: '删除商品失败' });
+  }
+});
+
+// 下架商品（设为不活跃状态，但保留数据）
+router.put('/:id/deactivate', auth, async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ message: '商品不存在' });
+    if (product.seller.toString() !== req.user.id) return res.status(403).json({ message: '无权操作' });
+    
+    if (product.status === 'pending_completion') {
+      return res.status(400).json({ message: '有进行中的交易，无法下架商品' });
+    }
+    
+    product.status = 'inactive';
+    await product.save();
+    res.json({ message: '商品已下架', product });
+  } catch (error) {
+    console.error('下架商品失败:', error);
+    res.status(500).json({ message: '下架商品失败' });
+  }
+});
+
+// 重新上架商品
+router.put('/:id/reactivate', auth, async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ message: '商品不存在' });
+    if (product.seller.toString() !== req.user.id) return res.status(403).json({ message: '无权操作' });
+    
+    if (product.status === 'sold') {
+      return res.status(400).json({ message: '已售出的商品无法重新上架' });
+    }
+    
+    product.status = 'active';
+    await product.save();
+    res.json({ message: '商品已重新上架', product });
+  } catch (error) {
+    console.error('重新上架失败:', error);
+    res.status(500).json({ message: '重新上架失败' });
+  }
 });
 
 module.exports = router;

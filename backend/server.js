@@ -9,6 +9,7 @@ const ratingRoutes = require('./routes/ratingRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
+const transactionRoutes = require('./routes/transactionRoutes');
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.use('/api/ratings', ratingRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/transactions', transactionRoutes);
 
 // 数据库连接（使用环境变量）
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/second_hand_app';

@@ -49,8 +49,25 @@ router.post('/login', async (req, res) => {
 
 // 获取当前用户信息
 router.get('/me', auth, async (req, res) => {
-  const user = await User.findById(req.user.id).select('-passwordHash');
-  res.json(user);
+  try {
+    const user = await User.findById(req.user.id).select('-passwordHash');
+    
+    // 获取用户发布的商品
+    const Product = require('../models/Product');
+    const postedProducts = await Product.find({ seller: req.user.id })
+      .populate('buyer', 'username email')
+      .sort({ createdAt: -1 });
+    
+    const userWithProducts = {
+      ...user.toObject(),
+      postedProducts
+    };
+    
+    res.json(userWithProducts);
+  } catch (error) {
+    console.error('获取用户信息失败:', error);
+    res.status(500).json({ message: '获取用户信息失败' });
+  }
 });
 
   // 更新用户信息

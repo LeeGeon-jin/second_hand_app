@@ -7,6 +7,11 @@ import ChatWindow from './pages/ChatWindow.tsx';
 import Login from './components/Auth/Login.tsx';
 import Register from './components/Auth/Register.tsx';
 import UserProfile from './components/Profile/UserProfile.tsx';
+import MyProducts from './components/Profile/MyProducts.tsx';
+import MyRatings from './components/Profile/MyRatings.tsx';
+import MyChats from './components/Profile/MyChats.tsx';
+import TransactionHistory from './components/Transaction/TransactionHistory.tsx';
+import ProductDetail from './components/ProductDetail/ProductDetail.tsx';
 import ProductFormMobile from './components/ProductForm/ProductFormMobile.tsx';
 import { Popup } from 'antd-mobile';
 
@@ -25,6 +30,11 @@ const App: React.FC = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/profile" element={<UserProfile />} />
+          <Route path="/my-products" element={<MyProducts />} />
+          <Route path="/my-ratings" element={<MyRatings />} />
+          <Route path="/my-chats" element={<MyChats />} />
+          <Route path="/transaction-history" element={<TransactionHistory />} />
+          <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/messages" element={<MessageList />} />
           <Route path="/chat/:chatId" element={<ChatWindow />} />
           <Route path="/*" element={<MobileHome />} />
