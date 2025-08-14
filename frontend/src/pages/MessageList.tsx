@@ -117,7 +117,7 @@ const MessageList: React.FC = () => {
 
   const fetchChats = async () => {
     try {
-      const response = await axios.get('/api/chat');
+      const response = await axios.get('https://secondhand-production.up.railway.app/api/chat');
       setChats(response.data as Chat[]);
     } catch (error) {
       console.error('获取聊天列表失败:', error);

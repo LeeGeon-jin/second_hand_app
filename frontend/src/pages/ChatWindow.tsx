@@ -143,7 +143,7 @@ const ChatWindow: React.FC = () => {
 
   const fetchMessages = async () => {
     try {
-      const response = await axios.get(`/api/chat/${chatId}/messages`);
+      const response = await axios.get(`https://secondhand-production.up.railway.app/api/chat/${chatId}/messages`);
       setMessages(response.data as Message[]);
     } catch (error) {
       console.error('获取消息失败:', error);
@@ -152,7 +152,7 @@ const ChatWindow: React.FC = () => {
 
   const fetchChatInfo = async () => {
     try {
-      const response = await axios.get(`/api/chat/${chatId}`);
+      const response = await axios.get(`https://secondhand-production.up.railway.app/api/chat/${chatId}`);
       setChatInfo(response.data as ChatInfo);
     } catch (error) {
       console.error('获取聊天信息失败:', error);
@@ -169,7 +169,7 @@ const ChatWindow: React.FC = () => {
     if (!input.trim() || !chatId) return;
 
     try {
-      const response = await axios.post(`/api/chat/${chatId}/messages`, {
+      const response = await axios.post(`https://secondhand-production.up.railway.app/api/chat/${chatId}/messages`, {
         content: input.trim(),
         type: 'text'
       });

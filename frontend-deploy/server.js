@@ -3,16 +3,6 @@ const path = require('path');
 
 const app = express();
 
-// 设置正确的 MIME 类型
-app.use((req, res, next) => {
-  if (req.url.endsWith('.css')) {
-    res.setHeader('Content-Type', 'text/css');
-  } else if (req.url.endsWith('.js')) {
-    res.setHeader('Content-Type', 'application/javascript');
-  }
-  next();
-});
-
 // 静态文件服务
 app.use(express.static(__dirname));
 

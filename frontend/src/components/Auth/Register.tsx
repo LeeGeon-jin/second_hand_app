@@ -56,7 +56,7 @@ const Register: React.FC = () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(async () => {
         try {
-          const res = await axios.get(`/api/users/check-username?username=${encodeURIComponent(value)}`);
+          const res = await axios.get(`https://secondhand-production.up.railway.app/api/users/check-username?username=${encodeURIComponent(value)}`);
           const data = res.data as { exists?: boolean };
           if (data.exists) {
             reject('该用户名已使用');
@@ -81,7 +81,7 @@ const Register: React.FC = () => {
   // 注册提交
   const onFinish = async (values: any) => {
     try {
-      await axios.post('/api/users/register', {
+      await axios.post('https://secondhand-production.up.railway.app/api/users/register', {
         username: values.username,
         password: values.password,
         email: values.email,

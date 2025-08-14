@@ -67,14 +67,14 @@ const Login: React.FC = () => {
     try {
       let res, data: any;
       if (values.type === 'phone') {
-        res = await axios.post('/api/users/login/phone', {
+        res = await axios.post('https://secondhand-production.up.railway.app/api/users/login/phone', {
           phone: values.phone,
           code: values.code,
           remember: values.remember
         });
         data = res.data;
       } else {
-        res = await axios.post('/api/users/login', {
+        res = await axios.post('https://secondhand-production.up.railway.app/api/users/login', {
           username: values.username,
           password: values.password,
         });
