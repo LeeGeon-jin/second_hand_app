@@ -4,7 +4,8 @@
 param(
     [string]$CommitMessage = "",    # 自定义提交信息
     [switch]$Force,                 # 强制推送
-    [switch]$SkipCheck              # 跳过更改检查
+    [switch]$SkipCheck,             # 跳过更改检查
+    [switch]$SkipSecurityCheck      # 跳过安全检查
 )
 
 Write-Host "🚀 一键更新到GitHub脚本启动..." -ForegroundColor Green
@@ -59,6 +60,24 @@ if (!$SkipCheck) {
             "R " { Write-Host "  🔄 重命名: $file" -ForegroundColor Yellow }
             default { Write-Host "  ❓ 其他: $file" -ForegroundColor Gray }
         }
+    }
+    
+    # 运行安全检查
+    if (!$SkipSecurityCheck) {
+        Write-Host "`n🔒 运行安全检查..." -ForegroundColor Yellow
+        if (Test-Path "security-check.ps1") {
+            & ".\security-check.ps1"
+            Write-Host "`n⚠️  请确认上述安全检查结果，如有问题请先修复" -ForegroundColor Yellow
+            $continue = Read-Host "是否继续提交？(y/N)"
+            if ($continue -ne "y" -and $continue -ne "Y") {
+                Write-Host "❌ 用户取消提交" -ForegroundColor Red
+                exit 1
+            }
+        } else {
+            Write-Host "⚠️  未找到 security-check.ps1，跳过安全检查" -ForegroundColor Yellow
+        }
+    } else {
+        Write-Host "`n⚠️  跳过安全检查（使用 -SkipSecurityCheck 参数）" -ForegroundColor Yellow
     }
 }
 
@@ -123,7 +142,8 @@ Write-Host "✅ 所有更改已成功推送到GitHub" -ForegroundColor White
 Write-Host "🌐 可以在GitHub上查看最新代码" -ForegroundColor White
 
 Write-Host "`n📝 使用说明：" -ForegroundColor Cyan
-Write-Host "  .\update-github.ps1                    # 交互式更新" -ForegroundColor White
+Write-Host "  .\update-github.ps1                    # 交互式更新（包含安全检查）" -ForegroundColor White
 Write-Host "  .\update-github.ps1 -CommitMessage '修复bug'" -ForegroundColor White
 Write-Host "  .\update-github.ps1 -Force            # 强制推送" -ForegroundColor White
 Write-Host "  .\update-github.ps1 -SkipCheck        # 跳过更改检查" -ForegroundColor White
+Write-Host "  .\update-github.ps1 -SkipSecurityCheck # 跳过安全检查" -ForegroundColor White
