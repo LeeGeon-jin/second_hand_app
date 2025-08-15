@@ -10,6 +10,16 @@ const ProductImageUploader: React.FC<ProductImageUploaderProps> = ({ value = [],
   // 过滤掉blob URL，只保留有效的服务器URL
   const validImages = value.filter(url => !url.startsWith('blob:'));
   
+  // 根据环境选择API地址
+  const getApiUrl = () => {
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return 'http://localhost:5000';
+    } else {
+      // 在线环境，使用Railway后端API
+      return 'https://secondhand-production.up.railway.app';
+    }
+  };
+  
   console.log('ImageUploader - 接收到的图片:', value);
   console.log('ImageUploader - 过滤后的图片:', validImages);
   
@@ -40,38 +50,60 @@ const ProductImageUploader: React.FC<ProductImageUploaderProps> = ({ value = [],
             console.log('FormData创建完成，准备发送请求');
             
             // 调用后端上传API
-            const response = await fetch('https://secondhand-production.up.railway.app/api/upload/image', {
-              method: 'POST',
-              body: formData,
-              headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            const apiUrl = getApiUrl();
+            
+            // 创建带超时的fetch请求
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒超时
+            
+            try {
+              const response = await fetch(`${apiUrl}/api/upload/image`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                  'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                signal: controller.signal
+              });
+              
+              clearTimeout(timeoutId);
+              
+              console.log('上传响应状态:', response.status, response.statusText);
+              
+              if (!response.ok) {
+                const errorText = await response.text();
+                console.error('上传失败，响应内容:', errorText);
+                throw new Error(`上传失败: ${response.status} ${response.statusText}`);
               }
-            });
-            
-            console.log('上传响应状态:', response.status, response.statusText);
-            
-            if (!response.ok) {
-              const errorText = await response.text();
-              console.error('上传失败，响应内容:', errorText);
-              throw new Error(`上传失败: ${response.status} ${response.statusText}`);
+              
+              const result = await response.json();
+              console.log('上传成功，返回结果:', result);
+              
+              // 强制返回服务器URL，不使用blob URL
+              const serverUrl = result.url;
+              console.log('返回服务器URL:', serverUrl);
+              
+              return { 
+                url: serverUrl,
+                // 添加额外属性确保ImageUploader使用服务器URL
+                status: 'done',
+                thumbUrl: serverUrl
+              };
+            } catch (fetchError: any) {
+              clearTimeout(timeoutId);
+              if (fetchError.name === 'AbortError') {
+                console.error('上传超时');
+                Toast.show({ content: '上传超时，请检查网络连接或稍后重试' });
+                throw new Error('上传超时');
+              } else {
+                console.error('图片上传失败:', fetchError);
+                Toast.show({ content: '图片上传失败，请确保本地后端服务器正在运行' });
+                throw new Error('上传失败');
+              }
             }
-            
-            const result = await response.json();
-            console.log('上传成功，返回结果:', result);
-            
-            // 强制返回服务器URL，不使用blob URL
-            const serverUrl = result.url;
-            console.log('返回服务器URL:', serverUrl);
-            
-            return { 
-              url: serverUrl,
-              // 添加额外属性确保ImageUploader使用服务器URL
-              status: 'done',
-              thumbUrl: serverUrl
-            };
           } catch (error) {
             console.error('图片上传失败:', error);
-            Toast.show({ content: '图片上传失败' });
+            Toast.show({ content: '图片上传失败，请确保本地后端服务器正在运行' });
             throw new Error('上传失败');
           }
         }}
