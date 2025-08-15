@@ -40,7 +40,7 @@ const ProductImageUploader: React.FC<ProductImageUploaderProps> = ({ value = [],
             console.log('FormData创建完成，准备发送请求');
             
             // 调用后端上传API
-            const response = await fetch('/api/upload/image', {
+            const response = await fetch('https://secondhand-production.up.railway.app/api/upload/image', {
               method: 'POST',
               body: formData,
               headers: {
