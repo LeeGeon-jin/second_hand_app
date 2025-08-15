@@ -33,7 +33,20 @@ const MobileHome: React.FC = () => {
 
   // 过滤商品
   let filteredProducts = products.filter(item => {
-    const matchCat = activeCat === '推荐' || item.category === activeCat;
+    // 支持分类名称的兼容性匹配
+    let matchCat = false;
+    if (activeCat === '推荐') {
+      matchCat = true; // 推荐分类显示所有商品
+    } else if (activeCat === '电子产品') {
+      matchCat = item.category === '电子产品' || item.category === '电子';
+    } else if (activeCat === '服饰') {
+      matchCat = item.category === '服饰' || item.category === '服装鞋帽';
+    } else if (activeCat === '家具') {
+      matchCat = item.category === '家具' || item.category === '家居用品';
+    } else {
+      matchCat = item.category === activeCat;
+    }
+    
     const matchSearch = !search || item.title?.includes(search) || item.description?.includes(search);
     return matchCat && matchSearch;
   });
@@ -209,6 +222,10 @@ const MobileHome: React.FC = () => {
             // 如果是相对路径，添加后端URL
             if (img && img.startsWith('/api/')) {
               img = 'https://secondhand-production.up.railway.app' + img;
+            }
+            // 如果图片路径包含不存在的文件，使用默认图片
+            if (img && img.includes('image-1755262971242-283652795.avif')) {
+              img = 'https://images.unsplash.com/photo-1498049799451-61-7780e7231661?w=400&h=400&fit=crop';
             }
             const title = item.title || '';
             const user = item.user || {};
