@@ -10,7 +10,7 @@ function getLocalEstimate(title, category) {
   const basePrices = {
     '家具': 50,
     '电器': 80,
-    '电子': 120,
+    '电子产品': 120,
     '文具': 15,
     '服饰': 25,
     '运动': 40,
@@ -27,16 +27,16 @@ function getLocalEstimate(title, category) {
 
   // 品牌识别和价格调整
   const brandKeywords = {
-    'iPhone': { multiplier: 2.5, category: '电子' },
-    'Samsung': { multiplier: 1.8, category: '电子' },
-    'MacBook': { multiplier: 3.0, category: '电子' },
-    'iPad': { multiplier: 2.0, category: '电子' },
+    'iPhone': { multiplier: 2.5, category: '电子产品' },
+    'Samsung': { multiplier: 1.8, category: '电子产品' },
+    'MacBook': { multiplier: 3.0, category: '电子产品' },
+    'iPad': { multiplier: 2.0, category: '电子产品' },
     'Nike': { multiplier: 1.5, category: '运动' },
     'Adidas': { multiplier: 1.4, category: '运动' },
     'IKEA': { multiplier: 0.8, category: '家具' },
-    'Sony': { multiplier: 1.6, category: '电子' },
-    'Canon': { multiplier: 1.7, category: '电子' },
-    'Nikon': { multiplier: 1.7, category: '电子' }
+    'Sony': { multiplier: 1.6, category: '电子产品' },
+    'Canon': { multiplier: 1.7, category: '电子产品' },
+    'Nikon': { multiplier: 1.7, category: '电子产品' }
   };
 
   // 检查标题中的品牌关键词

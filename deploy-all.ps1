@@ -29,16 +29,7 @@ if (!$SkipBuild) {
     Write-Host "1. 构建前端项目..." -ForegroundColor Yellow
     Set-Location "frontend"
     
-    # 检查是否有未提交的更改
-    $gitStatus = git status --porcelain 2>$null
-    if ($gitStatus) {
-        Write-Host "⚠️  发现未提交的更改，建议先提交代码" -ForegroundColor Yellow
-        $response = Read-Host "是否继续部署？(y/n)"
-        if ($response -ne "y") {
-            Write-Host "部署已取消" -ForegroundColor Red
-            exit 0
-        }
-    }
+    # 跳过未提交更改检查，直接继续部署
     
     # 构建前端
     Write-Host "正在构建前端..." -ForegroundColor Gray

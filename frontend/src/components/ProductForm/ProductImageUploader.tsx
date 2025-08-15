@@ -83,11 +83,17 @@ const ProductImageUploader: React.FC<ProductImageUploaderProps> = ({ value = [],
               const serverUrl = result.url;
               console.log('返回服务器URL:', serverUrl);
               
+              // 将相对路径转换为完整URL
+              const fullUrl = serverUrl.startsWith('http') 
+                ? serverUrl 
+                : `${apiUrl}${serverUrl}`;
+              console.log('完整图片URL:', fullUrl);
+              
               return { 
-                url: serverUrl,
+                url: fullUrl,
                 // 添加额外属性确保ImageUploader使用服务器URL
                 status: 'done',
-                thumbUrl: serverUrl
+                thumbUrl: fullUrl
               };
             } catch (fetchError: any) {
               clearTimeout(timeoutId);
@@ -111,7 +117,15 @@ const ProductImageUploader: React.FC<ProductImageUploaderProps> = ({ value = [],
           console.log('ImageUploader onChange 被调用，items:', items);
           const urls = items.map(i => {
             // 优先使用thumbUrl，如果没有则使用url
-            const imageUrl = (i as any).thumbUrl || i.url;
+            let imageUrl = (i as any).thumbUrl || i.url;
+            
+            // 如果是相对路径，转换为完整URL
+            if (imageUrl && !imageUrl.startsWith('http') && imageUrl.startsWith('/')) {
+              const apiUrl = getApiUrl();
+              imageUrl = `${apiUrl}${imageUrl}`;
+              console.log('转换相对路径为完整URL:', imageUrl);
+            }
+            
             console.log('处理图片项:', i, '使用URL:', imageUrl);
             return imageUrl;
           });

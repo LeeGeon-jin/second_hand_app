@@ -417,7 +417,7 @@ const ProductFormMobile: React.FC = () => {
   const categoryOptions = [
     { label: '家具', value: '家具' },
     { label: '电器', value: '电器' },
-    { label: '电子', value: '电子' },
+    { label: '电子产品', value: '电子产品' },
     { label: '文具', value: '文具' },
     { label: '服饰', value: '服饰' },
     { label: '运动', value: '运动' },
