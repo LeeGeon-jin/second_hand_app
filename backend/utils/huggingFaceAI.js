@@ -1,55 +1,346 @@
 const axios = require('axios');
+const { getComparablePrices } = require('./marketData');
+const { estimatePriceWithAIServices } = require('./aiServiceManager');
 
 // Hugging Face Inference API配置
 const HF_API_URL = 'https://api-inference.huggingface.co/models';
-const HF_MODEL = 'distilgpt2'; // 使用更轻量级的模型
+const HF_MODEL = 'facebook/bart-large-mnli'; // 使用文本分类模型
 
-// 本地估价逻辑（备用方案）
+// 本地估价逻辑（备用方案）- 优化后的价格基础
 function getLocalEstimate(title, category) {
-  // 基础价格表（基于澳洲二手市场价格调研）
+  // 基础价格表（基于真实澳洲二手市场价格调研）- 二手价格调整
+  // 二手产品价格特点：电子产品3-6折，家具3-5折，运动用品4-7折，服饰2-5折
   const basePrices = {
-    '家具': 50,
-    '电器': 80,
-    '电子产品': 120,
-    '文具': 15,
-    '服饰': 25,
-    '运动': 40,
-    '母婴': 35,
-    '美妆': 20,
-    '乐器': 100,
-    '图书': 10,
-    '宠物': 30,
-    '其他': 30
+    '家具': 100,      // 二手家具基础价格（IKEA书桌原价$150-200，二手$60-100）
+    '电器': 150,      // 二手电器基础价格
+    '电子产品': 1000, // 二手电子产品基础价格（iPhone原价$1800-2200，二手$800-1200）
+    '文具': 30,       // 二手文具基础价格
+    '服饰': 50,       // 二手服饰基础价格（原价$100-200，二手$20-100）
+    '运动': 120,      // 二手运动用品基础价格（原价$200-300，二手$80-200）
+    '母婴': 80,       // 二手母婴用品基础价格
+    '美妆': 40,       // 二手美妆基础价格
+    '乐器': 300,      // 二手乐器基础价格
+    '图书': 20,       // 二手图书基础价格
+    '宠物': 80,       // 二手宠物用品基础价格
+    '其他': 60        // 二手其他物品基础价格
   };
 
-  // 根据标题关键词调整价格
-  let price = basePrices[category] || 30;
+  // 全局乘数覆盖：统一为0.9
+  const OVERRIDE_MULTIPLIER = 0.9;
 
-  // 品牌识别和价格调整
+  // 根据标题关键词调整价格
+  let price = basePrices[category] || 50;
+
+  // 品牌识别和价格调整 - 基于真实二手市场价格调整
   const brandKeywords = {
-    'iPhone': { multiplier: 2.5, category: '电子产品' },
-    'Samsung': { multiplier: 1.8, category: '电子产品' },
-    'MacBook': { multiplier: 3.0, category: '电子产品' },
-    'iPad': { multiplier: 2.0, category: '电子产品' },
-    'Nike': { multiplier: 1.5, category: '运动' },
-    'Adidas': { multiplier: 1.4, category: '运动' },
-    'IKEA': { multiplier: 0.8, category: '家具' },
-    'Sony': { multiplier: 1.6, category: '电子产品' },
-    'Canon': { multiplier: 1.7, category: '电子产品' },
-    'Nikon': { multiplier: 1.7, category: '电子产品' }
+    // 电子产品 - 基于3-6折的二手价格
+    'iPhone': { multiplier: 2.0, category: '电子产品' },  // iPhone二手约4-5折
+    'Samsung': { multiplier: 1.3, category: '电子产品' },  // Samsung二手约4-5折
+    'MacBook': { multiplier: 2.0, category: '电子产品' },  // MacBook二手约4-5折
+    'iPad': { multiplier: 1.2, category: '电子产品' },     // iPad二手约4-5折
+    'AirPods': { multiplier: 1.0, category: '电子产品' },  // AirPods二手约4-5折
+    'Sony': { multiplier: 1.5, category: '电子产品' },     // Sony二手约4-5折
+    'Canon': { multiplier: 1.8, category: '电子产品' },    // Canon二手约4-5折
+    'Nikon': { multiplier: 1.8, category: '电子产品' },    // Nikon二手约4-5折
+    // 运动用品 - 基于4-7折的二手价格
+    'Nike': { multiplier: 1.4, category: '运动' },         // Nike二手约5-6折
+    'Adidas': { multiplier: 1.2, category: '运动' },       // Adidas二手约5-6折
+    'Jordan': { multiplier: 1.4, category: '运动' },       // Jordan二手约5-6折
+    'Air Jordan': { multiplier: 1.4, category: '运动' },   // Air Jordan二手约5-6折
+    // 家具 - 基于3-5折的二手价格
+    'IKEA': { multiplier: 0.8, category: '家具' },         // IKEA二手约3-4折
+    'BILLY': { multiplier: 0.9, category: '家具' },        // IKEA BILLY二手约3-4折
+    'MALM': { multiplier: 0.9, category: '家具' },         // IKEA MALM二手约3-4折
+    'POANG': { multiplier: 0.85, category: '家具' },       // IKEA POANG二手约3-4折
+    // 服饰 - 基于2-5折的二手价格
+    'UNIQLO': { multiplier: 0.8, category: '服饰' },       // UNIQLO二手约2-3折
+    '优衣库': { multiplier: 0.8, category: '服饰' },       // 优衣库二手约2-3折
+    'ZARA': { multiplier: 0.9, category: '服饰' },         // ZARA二手约3-4折
+    'H&M': { multiplier: 0.8, category: '服饰' },          // H&M二手约2-3折
+    'Levi': { multiplier: 0.9, category: '服饰' }          // Levi's二手约3-4折
   };
 
   // 检查标题中的品牌关键词
   for (const [brand, config] of Object.entries(brandKeywords)) {
     if (title.toLowerCase().includes(brand.toLowerCase()) && category === config.category) {
-      price = Math.round(price * config.multiplier);
+      price = Math.round(price * OVERRIDE_MULTIPLIER);
       break;
     }
   }
 
+  // 子类与材质识别：所有分类的详细规则
+  if (category === '电子产品') {
+    const electronicsRules = [
+      { keywords: ['iPhone', '苹果手机'], multiplier: 2.5 },
+      { keywords: ['Samsung', 'Galaxy', '三星'], multiplier: 2.0 },
+      { keywords: ['MacBook', '苹果笔记本'], multiplier: 2.5 },
+      { keywords: ['iPad', '苹果平板'], multiplier: 1.5 },
+      { keywords: ['AirPods', '苹果耳机'], multiplier: 1.2 },
+      { keywords: ['Sony', '索尼'], multiplier: 2.0 },
+      { keywords: ['Canon', '佳能'], multiplier: 2.5 },
+      { keywords: ['Nikon', '尼康'], multiplier: 2.5 },
+      { keywords: ['相机', 'camera'], multiplier: 2.0 },
+      { keywords: ['镜头', 'lens'], multiplier: 1.8 },
+      { keywords: ['游戏机', 'PS5', 'Xbox', 'Switch'], multiplier: 1.5 },
+      { keywords: ['显示器', 'monitor'], multiplier: 1.5 },
+      { keywords: ['键盘', 'keyboard'], multiplier: 1.2 },
+      { keywords: ['鼠标', 'mouse'], multiplier: 1.1 }
+    ];
+    for (const rule of electronicsRules) {
+      if (rule.keywords.some(k => title.toLowerCase().includes(k.toLowerCase()))) {
+        price = Math.round(price * OVERRIDE_MULTIPLIER);
+        break;
+      }
+    }
+    // 电子产品价格上限（AUD）
+    price = Math.min(price, 3000);
+  }
+
+  if (category === '家具') {
+    const furnitureRules = [
+      { keywords: ['沙发', 'sofa'], multiplier: 2.0 },
+      { keywords: ['餐桌', 'dining table'], multiplier: 1.8 },
+      { keywords: ['书桌', 'desk', '办公桌'], multiplier: 1.4 },
+      { keywords: ['书柜', '书架', 'bookcase', 'bookshelf', 'BILLY'], multiplier: 1.2 },
+      { keywords: ['衣柜', 'wardrobe'], multiplier: 1.5 },
+      { keywords: ['床架', 'bed frame'], multiplier: 1.5 },
+      { keywords: ['床垫', 'mattress'], multiplier: 1.8 },
+      { keywords: ['茶几', 'coffee table'], multiplier: 1.3 },
+      { keywords: ['电视柜', 'tv stand'], multiplier: 1.3 },
+      { keywords: ['椅', 'chair', 'POANG'], multiplier: 1.2 },
+      { keywords: ['柜子', 'cabinet'], multiplier: 1.4 },
+      { keywords: ['架子', 'shelf', 'KALLAX'], multiplier: 1.1 }
+    ];
+    for (const rule of furnitureRules) {
+      if (rule.keywords.some(k => title.toLowerCase().includes(k.toLowerCase()))) {
+        price = Math.round(price * OVERRIDE_MULTIPLIER);
+        break;
+      }
+    }
+    // 家具价格上限（AUD）
+    price = Math.min(price, 800);
+  }
+
+  if (category === '运动') {
+    const sportsRules = [
+      { keywords: ['Jordan', 'Air Jordan'], multiplier: 1.8 },
+      { keywords: ['Nike', '耐克'], multiplier: 1.8 },
+      { keywords: ['Adidas', '阿迪达斯'], multiplier: 1.5 },
+      { keywords: ['自行车', 'bicycle', 'bike'], multiplier: 2.0 },
+      { keywords: ['跑步机', 'treadmill'], multiplier: 2.5 },
+      { keywords: ['哑铃', 'dumbbell'], multiplier: 1.3 },
+      { keywords: ['瑜伽垫', 'yoga mat'], multiplier: 1.1 },
+      { keywords: ['网球拍', 'tennis racket'], multiplier: 1.5 },
+      { keywords: ['高尔夫', 'golf'], multiplier: 1.8 },
+      { keywords: ['滑板', 'skateboard'], multiplier: 1.4 },
+      { keywords: ['冲浪板', 'surfboard'], multiplier: 2.0 },
+      { keywords: ['健身器材', 'gym equipment'], multiplier: 1.5 }
+    ];
+    for (const rule of sportsRules) {
+      if (rule.keywords.some(k => title.toLowerCase().includes(k.toLowerCase()))) {
+        price = Math.round(price * OVERRIDE_MULTIPLIER);
+        break;
+      }
+    }
+    // 运动用品价格上限（AUD）
+    price = Math.min(price, 600);
+  }
+
+  if (category === '服饰') {
+    const apparelRules = [
+      { keywords: ['外套', 'jacket', 'coat'], multiplier: 1.5 },
+      { keywords: ['羽绒', 'down'], multiplier: 1.8 },
+      { keywords: ['皮衣', '皮革', 'leather'], multiplier: 1.6 },
+      { keywords: ['羊毛', 'wool'], multiplier: 1.3 },
+      { keywords: ['连衣裙', 'dress'], multiplier: 1.3 },
+      { keywords: ['西装', 'suit'], multiplier: 1.6 },
+      { keywords: ['牛仔裤', 'jeans', 'Levi'], multiplier: 1.2 },
+      { keywords: ['运动鞋', 'sneakers', '跑鞋', 'Jordan', 'Nike', 'Adidas'], multiplier: 1.5 },
+      { keywords: ['包', 'bag', 'handbag'], multiplier: 1.4 },
+      { keywords: ['手表', 'watch'], multiplier: 2.0 },
+      { keywords: ['首饰', 'jewelry'], multiplier: 1.8 }
+    ];
+    for (const rule of apparelRules) {
+      if (rule.keywords.some(k => title.toLowerCase().includes(k.toLowerCase()))) {
+        price = Math.round(price * OVERRIDE_MULTIPLIER);
+        break;
+      }
+    }
+    // 奢侈品牌处理
+    const luxuryBrands = ['LV', 'Gucci', 'Chanel', 'Prada', 'Hermes', 'Dior'];
+    const hasLuxury = luxuryBrands.some(b => title.toLowerCase().includes(b.toLowerCase()));
+    const hasProof = ['正品', 'receipt', '小票', '发票'].some(k => title.toLowerCase().includes(k.toLowerCase()));
+    if (hasLuxury) {
+      price = Math.round(price * OVERRIDE_MULTIPLIER);
+    }
+    // 服饰价格上限（AUD）
+    const apparelCap = hasLuxury && hasProof ? 800 : 200;
+    price = Math.min(price, apparelCap);
+  }
+
+  if (category === '电器') {
+    const applianceRules = [
+      { keywords: ['冰箱', 'refrigerator'], multiplier: 2.5 },
+      { keywords: ['洗衣机', 'washing machine'], multiplier: 2.0 },
+      { keywords: ['微波炉', 'microwave'], multiplier: 1.5 },
+      { keywords: ['烤箱', 'oven'], multiplier: 2.0 },
+      { keywords: ['咖啡机', 'coffee machine'], multiplier: 2.5 },
+      { keywords: ['吸尘器', 'vacuum cleaner'], multiplier: 1.8 },
+      { keywords: ['空调', 'air conditioner'], multiplier: 3.0 },
+      { keywords: ['电风扇', 'fan'], multiplier: 1.2 },
+      { keywords: ['电暖器', 'heater'], multiplier: 1.5 },
+      { keywords: ['电视', 'TV', 'television'], multiplier: 2.5 },
+      { keywords: ['音响', 'speaker'], multiplier: 2.0 }
+    ];
+    for (const rule of applianceRules) {
+      if (rule.keywords.some(k => title.toLowerCase().includes(k.toLowerCase()))) {
+        price = Math.round(price * OVERRIDE_MULTIPLIER);
+        break;
+      }
+    }
+    // 电器价格上限（AUD）
+    price = Math.min(price, 1200);
+  }
+
+  if (category === '文具') {
+    const stationeryRules = [
+      { keywords: ['打印机', 'printer'], multiplier: 2.0 },
+      { keywords: ['扫描仪', 'scanner'], multiplier: 1.6 },
+      { keywords: ['显示器', 'monitor'], multiplier: 2.5 },
+      { keywords: ['投影仪', 'projector'], multiplier: 2.8 },
+      { keywords: ['办公椅', 'office chair'], multiplier: 1.8 },
+      { keywords: ['台灯', 'desk lamp'], multiplier: 1.2 },
+      { keywords: ['背包', '书包', 'backpack'], multiplier: 1.1 },
+      { keywords: ['键盘', 'keyboard'], multiplier: 1.2 },
+      { keywords: ['鼠标', 'mouse'], multiplier: 1.1 },
+      { keywords: ['计算器', 'calculator'], multiplier: 1.1 },
+      { keywords: ['白板', 'whiteboard'], multiplier: 1.5 }
+    ];
+    for (const rule of stationeryRules) {
+      if (rule.keywords.some(k => title.toLowerCase().includes(k.toLowerCase()))) {
+        price = Math.round(price * OVERRIDE_MULTIPLIER);
+        break;
+      }
+    }
+    // 文具价格上限（AUD）
+    price = Math.min(price, 200);
+  }
+
+  if (category === '母婴') {
+    const babyRules = [
+      { keywords: ['婴儿车', 'stroller', 'pram'], multiplier: 2.5 },
+      { keywords: ['婴儿床', 'baby cot', 'crib'], multiplier: 2.0 },
+      { keywords: ['高椅', 'high chair'], multiplier: 1.5 },
+      { keywords: ['安全座椅', 'car seat'], multiplier: 2.0 },
+      { keywords: ['玩具', 'toys'], multiplier: 1.2 },
+      { keywords: ['婴儿监视器', 'baby monitor'], multiplier: 1.8 },
+      { keywords: ['吸奶器', 'breast pump'], multiplier: 1.5 },
+      { keywords: ['背带', 'baby carrier'], multiplier: 1.3 },
+      { keywords: ['尿布台', 'changing table'], multiplier: 1.4 }
+    ];
+    for (const rule of babyRules) {
+      if (rule.keywords.some(k => title.toLowerCase().includes(k.toLowerCase()))) {
+        price = Math.round(price * OVERRIDE_MULTIPLIER);
+        break;
+      }
+    }
+    // 母婴用品价格上限（AUD）
+    price = Math.min(price, 400);
+  }
+
+  if (category === '美妆') {
+    const beautyRules = [
+      { keywords: ['化妆品', 'makeup'], multiplier: 1.2 },
+      { keywords: ['护肤品', 'skincare'], multiplier: 1.3 },
+      { keywords: ['香水', 'perfume'], multiplier: 2.0 },
+      { keywords: ['吹风机', 'hair dryer'], multiplier: 1.5 },
+      { keywords: ['卷发棒', 'curling iron'], multiplier: 1.3 },
+      { keywords: ['化妆镜', 'makeup mirror'], multiplier: 1.2 },
+      { keywords: ['指甲油', 'nail polish'], multiplier: 1.1 },
+      { keywords: ['化妆刷', 'makeup brushes'], multiplier: 1.2 },
+      { keywords: ['蒸脸器', 'facial steamer'], multiplier: 1.4 }
+    ];
+    for (const rule of beautyRules) {
+      if (rule.keywords.some(k => title.toLowerCase().includes(k.toLowerCase()))) {
+        price = Math.round(price * OVERRIDE_MULTIPLIER);
+        break;
+      }
+    }
+    // 美妆价格上限（AUD）
+    price = Math.min(price, 150);
+  }
+
+  if (category === '乐器') {
+    const instrumentRules = [
+      { keywords: ['吉他', 'guitar'], multiplier: 1.8 },
+      { keywords: ['钢琴', 'piano'], multiplier: 3.5 },
+      { keywords: ['小提琴', 'violin'], multiplier: 2.5 },
+      { keywords: ['鼓', 'drums'], multiplier: 2.0 },
+      { keywords: ['键盘', 'keyboard'], multiplier: 1.8 },
+      { keywords: ['萨克斯', 'saxophone'], multiplier: 2.2 },
+      { keywords: ['小号', 'trumpet'], multiplier: 1.8 },
+      { keywords: ['长笛', 'flute'], multiplier: 1.6 },
+      { keywords: ['贝斯', 'bass guitar'], multiplier: 2.0 },
+      { keywords: ['尤克里里', 'ukulele'], multiplier: 1.3 }
+    ];
+    for (const rule of instrumentRules) {
+      if (rule.keywords.some(k => title.toLowerCase().includes(k.toLowerCase()))) {
+        price = Math.round(price * OVERRIDE_MULTIPLIER);
+        break;
+      }
+    }
+    // 乐器价格上限（AUD）
+    price = Math.min(price, 1500);
+  }
+
+  if (category === '图书') {
+    const bookRules = [
+      { keywords: ['教科书', 'textbook'], multiplier: 2.5 },
+      { keywords: ['小说', 'novel'], multiplier: 1.2 },
+      { keywords: ['烹饪书', 'cookbook'], multiplier: 1.5 },
+      { keywords: ['儿童书', 'children book'], multiplier: 1.3 },
+      { keywords: ['杂志', 'magazine'], multiplier: 1.1 },
+      { keywords: ['漫画', 'comic'], multiplier: 1.4 },
+      { keywords: ['字典', 'dictionary'], multiplier: 1.8 },
+      { keywords: ['百科全书', 'encyclopedia'], multiplier: 2.0 },
+      { keywords: ['艺术书', 'art book'], multiplier: 2.2 },
+      { keywords: ['旅游指南', 'travel guide'], multiplier: 1.6 }
+    ];
+    for (const rule of bookRules) {
+      if (rule.keywords.some(k => title.toLowerCase().includes(k.toLowerCase()))) {
+        price = Math.round(price * OVERRIDE_MULTIPLIER);
+        break;
+      }
+    }
+    // 图书价格上限（AUD）
+    price = Math.min(price, 80);
+  }
+
+  if (category === '宠物') {
+    const petRules = [
+      { keywords: ['狗笼', 'dog crate'], multiplier: 1.5 },
+      { keywords: ['猫树', 'cat tree'], multiplier: 1.8 },
+      { keywords: ['宠物笼', 'pet carrier'], multiplier: 1.3 },
+      { keywords: ['宠物床', 'pet bed'], multiplier: 1.2 },
+      { keywords: ['宠物玩具', 'pet toys'], multiplier: 1.1 },
+      { keywords: ['鱼缸', 'aquarium'], multiplier: 2.0 },
+      { keywords: ['鸟笼', 'bird cage'], multiplier: 1.4 },
+      { keywords: ['宠物美容', 'pet grooming'], multiplier: 1.3 },
+      { keywords: ['宠物训练', 'pet training'], multiplier: 1.2 }
+    ];
+    for (const rule of petRules) {
+      if (rule.keywords.some(k => title.toLowerCase().includes(k.toLowerCase()))) {
+        price = Math.round(price * OVERRIDE_MULTIPLIER);
+        break;
+      }
+    }
+    // 宠物用品价格上限（AUD）
+    price = Math.min(price, 300);
+  }
+
   // 成色关键词调整
   const conditionKeywords = {
-    '全新': 1.2,
+    '全新': 1.05,
     '九成新': 1.0,
     '八成新': 0.8,
     '七成新': 0.6,
@@ -61,7 +352,7 @@ function getLocalEstimate(title, category) {
 
   for (const [condition, multiplier] of Object.entries(conditionKeywords)) {
     if (title.includes(condition)) {
-      price = Math.round(price * multiplier);
+      price = Math.round(price * OVERRIDE_MULTIPLIER);
       break;
     }
   }
@@ -69,46 +360,55 @@ function getLocalEstimate(title, category) {
   // 特殊商品类型调整
   if (category === '其他') {
     if (title.includes('画') || title.includes('艺术品')) {
-      price = 50; // 艺术品基础价格
+      price = 100; // 艺术品基础价格
     } else if (title.includes('收藏') || title.includes('限量')) {
-      price = 80; // 收藏品基础价格
+      price = 150; // 收藏品基础价格
     }
   }
 
-  return Math.max(5, price); // 最低5澳元
+  // 智能手机价格上限（防止过高）：全新<=1400，非全新<=1200
+  const smartphoneKeywords = ['iPhone', 'Samsung', 'Galaxy', 'Pixel', '小米', '华为', 'OPPO', 'vivo', '手机'];
+  const containsSmartphoneKeyword = smartphoneKeywords.some(k => title.toLowerCase().includes(k.toLowerCase()));
+  if (category === '电子产品' && containsSmartphoneKeyword) {
+    const isBrandNew = title.includes('全新');
+    const cap = isBrandNew ? 1400 : 1200;
+    price = Math.min(price, cap);
+  }
+
+  return Math.max(10, price); // 最低10澳元
 }
 
 function getLocalPriceRange(category, estimatedPrice) {
   // 价格范围计算（±30%）
-  const min = Math.max(5, Math.round(estimatedPrice * 0.7));
+  const min = Math.max(10, Math.round(estimatedPrice * 0.7));
   const max = Math.round(estimatedPrice * 1.3);
 
-  // 类别特定范围限制（澳元价格）
+  // 类别特定范围限制（澳元价格）- 微调
   const categoryRanges = {
-    '家具': { min: 20, max: 500 },
-    '电器': { min: 30, max: 800 },
-    '电子产品': { min: 50, max: 3000 },
-    '文具': { min: 5, max: 100 },
-    '服饰': { min: 10, max: 500 },
-    '服装鞋帽': { min: 10, max: 500 },
-    '运动': { min: 15, max: 300 },
-    '母婴': { min: 10, max: 200 },
-    '美妆': { min: 5, max: 100 },
-    '乐器': { min: 30, max: 1000 },
-    '图书': { min: 5, max: 50 },
-    '宠物': { min: 10, max: 200 },
-    '家居用品': { min: 20, max: 1000 },
-    '其他': { min: 5, max: 500 }
+    '家具': { min: 30, max: 800 },
+    '电器': { min: 50, max: 1200 },
+    '电子产品': { min: 100, max: 3000 },
+    '文具': { min: 10, max: 200 },
+    '服饰': { min: 15, max: 200 },
+    '服装鞋帽': { min: 15, max: 200 },
+    '运动': { min: 20, max: 600 },
+    '母婴': { min: 15, max: 400 },
+    '美妆': { min: 5, max: 150 },
+    '乐器': { min: 50, max: 1500 },
+    '图书': { min: 3, max: 80 },
+    '宠物': { min: 10, max: 300 },
+    '家居用品': { min: 30, max: 800 },
+    '其他': { min: 10, max: 500 }
   };
 
-  const range = categoryRanges[category] || { min: 5, max: 300 };
+  const range = categoryRanges[category] || { min: 10, max: 1000 };
   return {
     min: Math.max(range.min, min),
     max: Math.min(range.max, max)
   };
 }
 
-// AI估价函数（优先使用Hugging Face，备用本地算法）
+// AI估价函数（使用多级AI服务）
 async function estimatePriceWithHF(title, category, description, images) {
   try {
     // 检查必要参数
@@ -135,138 +435,72 @@ async function estimatePriceWithHF(title, category, description, images) {
       };
     }
 
-    // 构建AI提示词
-    const prompt = `作为澳洲二手商品估价专家，请分析以下商品：
-
-商品标题：${title}
-商品类别：${category}
-商品描述：${description}
-
-请基于澳洲二手市场价格，提供估价建议。所有价格必须以澳元(AUD)为单位。
-
-请返回JSON格式：
-{
-  "estimatedPrice": 数字,
-  "priceRange": {"min": 数字, "max": 数字},
-  "suggestions": ["建议1", "建议2", "建议3"],
-  "reasoning": "估价理由"
-}
-
-注意：价格单位为澳元(AUD)，估价要符合澳洲市场实际情况。`;
-
-    // 尝试使用Hugging Face API
-    const hfToken = process.env.HUGGING_FACE_TOKEN;
+    console.log('🤖 开始多级AI服务价格评估...');
     
-    if (hfToken) {
-      try {
-        console.log('🤖 尝试使用Hugging Face AI...');
-        const response = await axios.post(
-          `${HF_API_URL}/${HF_MODEL}`,
-          { inputs: prompt },
-          {
-            headers: {
-              'Authorization': `Bearer ${hfToken}`,
-              'Content-Type': 'application/json'
-            },
-            timeout: 15000
-          }
-        );
-
-        // 解析AI响应
-        const aiResponse = response.data[0]?.generated_text || '';
-        console.log('AI响应:', aiResponse);
-        
-        // 尝试提取JSON
-        const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          try {
-            const result = JSON.parse(jsonMatch[0]);
-            if (result.estimatedPrice) {
-              return {
-                success: true,
-                estimatedPrice: result.estimatedPrice,
-                priceRange: result.priceRange || { min: result.estimatedPrice * 0.8, max: result.estimatedPrice * 1.2 },
-                suggestions: result.suggestions || ['基于AI分析的个性化建议'],
-                reasoning: result.reasoning || '基于AI深度分析的估价建议',
-                source: 'Hugging Face AI'
-              };
-            }
-          } catch (parseError) {
-            console.log('AI响应解析失败，使用本地估价');
-          }
-        }
-      } catch (hfError) {
-        console.log('Hugging Face API调用失败，使用本地估价:', hfError.message);
-      }
-    }
-
-    // 使用本地智能估价算法作为备用方案
-    console.log('🔄 使用本地智能算法...');
-    const estimatedPrice = getLocalEstimate(title, category);
+    // 使用多级AI服务进行价格评估
+    const aiResult = await estimatePriceWithAIServices(title, description, category);
+    
+        // 使用AI服务结果（已经与本地算法融合）
+    const estimatedPrice = aiResult.estimatedPrice;
     const priceRange = getLocalPriceRange(category, estimatedPrice);
     
-    // 智能分析商品特征
-    let reasoning = `基于${category}类别的市场行情`;
-    let suggestions = [
-      '建议在类似商品中比较价格',
-      '考虑商品成色对价格的影响',
-      '关注市场供需情况'
-    ];
-
-    // 品牌识别
-    const brandKeywords = ['iPhone', 'Samsung', 'MacBook', 'iPad', 'Nike', 'Adidas'];
-    for (const brand of brandKeywords) {
-      if (title.toLowerCase().includes(brand.toLowerCase())) {
-        reasoning += `，识别到品牌${brand}`;
-        suggestions.push(`品牌${brand}通常有较高的保值率`);
-        break;
+    // 在线比价（可选）
+    try {
+      const market = await getComparablePrices(`${title} ${category}`);
+      if (market && market.success && market.medianPrice && market.currency === 'AUD') {
+        // 与市场中位价做加权融合：市场0.6，融合结果0.4
+        const finalPrice = Math.round(market.medianPrice * 0.6 + estimatedPrice * 0.4);
+        return {
+          success: true,
+          estimatedPrice: finalPrice,
+          priceRange: getLocalPriceRange(category, finalPrice),
+          suggestions: [
+            '基于AI智能分析的个性化建议',
+            '建议在类似商品中比较价格',
+            '考虑商品成色和市场需求'
+          ],
+          reasoning: `基于${category}类别的市场行情，${aiResult.source}分析；参考市场中位价$${market.medianPrice} (eBay AU)`,
+          source: aiResult.source,
+          aiAnalysis: {
+            service: aiResult.aiService,
+            confidence: aiResult.confidence,
+            localPrice: aiResult.localPrice,
+            aiMultiplier: aiResult.aiMultiplier
+          }
+        };
       }
-    }
-
-    // 成色识别
-    const conditionKeywords = ['全新', '九成新', '八成新', '七成新'];
-    for (const condition of conditionKeywords) {
-      if (title.includes(condition)) {
-        reasoning += `，商品成色${condition}`;
-        suggestions.push(`成色${condition}的商品价格相对稳定`);
-        break;
-      }
-    }
-
-    // 特殊商品分析
-    if (category === '其他') {
-      if (title.includes('画') || title.includes('艺术品')) {
-        reasoning += '，艺术品具有收藏价值';
-        suggestions.push('艺术品价格波动较大，建议参考专业评估');
-      } else if (title.includes('收藏') || title.includes('限量')) {
-        reasoning += '，限量版商品具有稀缺性';
-        suggestions.push('限量版商品可能高于市场预期');
-      }
-    }
-
-    // 根据描述长度调整建议
-    if (description.length > 50) {
-      suggestions.push('详细描述有助于买家了解商品，建议保持');
-    }
+    } catch (_) {}
 
     return {
       success: true,
-      estimatedPrice,
-      priceRange,
-      suggestions,
-      reasoning,
-      source: '本地智能算法'
+      estimatedPrice: estimatedPrice,
+      priceRange: priceRange,
+      suggestions: [
+        '基于AI智能分析的个性化建议',
+        '建议在类似商品中比较价格',
+        '考虑商品成色和市场需求'
+      ],
+      reasoning: `基于${category}类别的市场行情，${aiResult.source}分析`,
+      source: aiResult.source,
+      aiAnalysis: {
+        service: aiResult.aiService,
+        confidence: aiResult.confidence,
+        localPrice: aiResult.localPrice,
+        aiMultiplier: aiResult.aiMultiplier
+      }
     };
-
   } catch (error) {
     console.error('AI估价错误:', error);
     return {
       success: false,
-      message: '估价服务暂时不可用，请稍后重试'
+      message: '估价服务暂时不可用'
     };
   }
 }
 
 module.exports = {
-  estimatePriceWithHF
+  estimatePriceWithHF,
+  getLocalEstimate,
+  getLocalPriceRange
 };
+

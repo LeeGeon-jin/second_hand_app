@@ -64,8 +64,8 @@ $sensitivePatterns = @(
     "mongodb://[^'\s]+",
     "mongodb\+srv://[^'\s]+",
     "jwt\.sign.*secret",
-    "password.*=.*['\"][^'\"]+['\"]",
-    "api_key.*=.*['\"][^'\"]+['\"]"
+    "password.*=.*['`"][^'`"]+['`"]",
+    "api_key.*=.*['`"][^'`"]+['`"]"
 )
 
 $foundHardcoded = $false

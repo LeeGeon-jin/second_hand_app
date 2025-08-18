@@ -13,6 +13,9 @@ const ProductFormMobile: React.FC = () => {
   const [location, setLocation] = useState<string>('');
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [isEstimatingPrice, setIsEstimatingPrice] = useState(false);
+  // 发帖会话ID与剩余估价次数（最多3次）
+  const [formId] = useState<string>(() => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`);
+  const [estimateRemaining, setEstimateRemaining] = useState<number | null>(3);
   const [form] = Form.useForm();
 
   // 地址输入功能
@@ -312,12 +315,16 @@ const ProductFormMobile: React.FC = () => {
         title: values.title,
         category: Array.isArray(values.category) ? values.category[0] : values.category,
         description: values.description || '',
-        images: images
+        images: images,
+        formId
       });
 
       const data = response.data as any;
       if (data.success) {
         const { estimatedPrice, priceRange, suggestions, reasoning } = data;
+        if (typeof data.remaining === 'number') {
+          setEstimateRemaining(data.remaining);
+        }
         
         let message = `AI估价建议：\n`;
         if (estimatedPrice) {
@@ -332,6 +339,11 @@ const ProductFormMobile: React.FC = () => {
         if (suggestions && suggestions.length > 0) {
           message += `\n建议：\n${suggestions.map((s: string, i: number) => `${i + 1}. ${s}`).join('\n')}`;
         }
+        if (typeof data.limit === 'number' && typeof data.remaining === 'number') {
+          message += `\n\n剩余次数：${data.remaining}/${data.limit}`;
+        } else if (data.hint) {
+          message += `\n\n${data.hint}`;
+        }
 
         // 显示估价结果
         Toast.show({ 
@@ -345,11 +357,18 @@ const ProductFormMobile: React.FC = () => {
           form.setFieldValue('price', estimatedPrice);
         }
       } else {
+        if (typeof data.remaining === 'number') {
+          setEstimateRemaining(data.remaining);
+        }
         Toast.show({ content: data.message || '估价失败' });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('AI估价错误:', error);
-      Toast.show({ content: '估价服务暂时不可用，请稍后重试' });
+      const msg = error?.response?.data?.message || '估价服务暂时不可用，请稍后重试';
+      const remaining = error?.response?.data?.remaining;
+      const limit = error?.response?.data?.limit;
+      if (typeof remaining === 'number') setEstimateRemaining(remaining);
+      Toast.show({ content: typeof remaining === 'number' && typeof limit === 'number' ? `${msg}（剩余次数：${remaining}/${limit}）` : msg });
     } finally {
       setIsEstimatingPrice(false);
     }
@@ -490,9 +509,13 @@ const ProductFormMobile: React.FC = () => {
                 border: 'none',
                 whiteSpace: 'nowrap'
               }}
+              disabled={estimateRemaining === 0}
             >
               🤖 AI估价
             </Button>
+            <span style={{ fontSize: 12, color: '#888' }}>
+              {estimateRemaining !== null ? `剩余${estimateRemaining ?? 0}次` : '最多3次'}
+            </span>
           </div>
         </Form.Item>
         <Form.Item name="description" label="商品描述">

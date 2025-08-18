@@ -88,8 +88,14 @@ router.post('/validate-address', async (req, res) => {
 
 // AI估价API
 const { estimatePriceWithHF } = require('../utils/huggingFaceAI');
+const {
+  MAX_ATTEMPTS,
+  buildDraftKey,
+  getRemainingAttempts,
+  incrementAttempts,
+} = require('../utils/valuationQuota');
 router.post('/estimate-price', async (req, res) => {
-  const { title, category, description, images } = req.body;
+  const { title, category, description, images, formId } = req.body;
 
   if (!title || !category) {
     return res.status(400).json({
@@ -99,8 +105,31 @@ router.post('/estimate-price', async (req, res) => {
   }
 
   try {
+    // 构造“发布表单会话键”：优先使用前端传入的 formId；否则退化为按用户+标题+分类+首图
+    const userId = (req.user && req.user.id) || 'anonymous';
+    const sessionKey = formId ? `form:${userId}:${String(formId)}` : buildDraftKey(userId, title, category, images);
+
+    // 检查剩余次数
+    const remainingBefore = getRemainingAttempts(sessionKey, MAX_ATTEMPTS);
+    if (remainingBefore <= 0) {
+      return res.status(429).json({
+        success: false,
+        message: `本次发布AI估价次数已用完（最多${MAX_ATTEMPTS}次）`,
+        remaining: 0,
+        limit: MAX_ATTEMPTS
+      });
+    }
+
+    // 计数 +1
+    const remainingAfter = incrementAttempts(sessionKey, MAX_ATTEMPTS);
+
     const result = await estimatePriceWithHF(title, category, description, images);
-    res.json(result);
+    res.json({
+      ...result,
+      limit: MAX_ATTEMPTS,
+      remaining: remainingAfter,
+      hint: `本次发布AI估价还可使用${remainingAfter}次`
+    });
   } catch (error) {
     console.error('AI估价错误:', error);
     res.status(500).json({
