@@ -87,7 +87,7 @@ router.post('/validate-address', async (req, res) => {
 });
 
 // AI估价API
-const { estimatePriceWithHF } = require('../utils/huggingFaceAI');
+const { estimatePriceWithHF } = require('../utils/priceEstimation');
 router.post('/estimate-price', async (req, res) => {
   const { title, category, description, images } = req.body;
 

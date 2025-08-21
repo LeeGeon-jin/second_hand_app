@@ -38,7 +38,8 @@ NODE_ENV=development
 # AI服务配置（可选）
 # 如果需要使用AI功能，请配置以下密钥
 OPENAI_API_KEY=your-openai-api-key
-HUGGING_FACE_TOKEN=your-huggingface-token
+OPENROUTER_API_KEY=your-openrouter-api-key
+COHERE_API_KEY=your-cohere-api-key
 
 # 短信服务配置（可选）
 # 如果需要短信验证功能，请配置以下密钥

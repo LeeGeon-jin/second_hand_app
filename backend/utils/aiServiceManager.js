@@ -2,99 +2,139 @@ const axios = require('axios');
 
 // AI服务配置
 const AI_SERVICES = {
-  HUGGING_FACE: {
-    name: 'Hugging Face',
-    apiKey: process.env.HUGGING_FACE_TOKEN,
-    baseURL: 'https://api-inference.huggingface.co/models/facebook/bart-large-mnli',
-    model: 'facebook/bart-large-mnli',
-    isAvailable: () => !!process.env.HUGGING_FACE_TOKEN,
-         call: async (text, task = 'valuation') => {
-       try {
-         // 根据任务类型选择不同的标签
-         let candidateLabels;
-         if (task === 'moderation') {
-           candidateLabels = ['appropriate content', 'inappropriate content', 'sensitive content'];
-         } else {
-           candidateLabels = ['high value product', 'mid value product', 'low value product'];
-         }
-         
-         const response = await axios.post(
-           'https://api-inference.huggingface.co/models/facebook/bart-large-mnli',
-           {
-             inputs: text,
-             parameters: {
-               candidate_labels: candidateLabels
-             }
-           },
-           {
-             headers: {
-               'Authorization': `Bearer ${process.env.HUGGING_FACE_TOKEN}`,
-               'Content-Type': 'application/json'
-             },
-             timeout: 10000
-           }
-         );
-         return {
-           success: true,
-           data: response.data,
-           service: 'Hugging Face'
-         };
-       } catch (error) {
-         return {
-           success: false,
-           error: error.message,
-           service: 'Hugging Face'
-         };
-       }
-     }
-  },
-  
   OPENROUTER: {
     name: 'OpenRouter',
     apiKey: process.env.OPENROUTER_API_KEY,
     baseURL: 'https://openrouter.ai/api/v1',
     model: 'openai/gpt-3.5-turbo',
     isAvailable: () => !!process.env.OPENROUTER_API_KEY,
-    call: async (text) => {
-      try {
-        const response = await axios.post(
-          'https://openrouter.ai/api/v1/chat/completions',
-          {
-            model: 'openai/gpt-3.5-turbo',
-            messages: [
-              {
-                role: 'system',
-                content: '你是一个专业的二手商品价格评估专家。请分析以下商品信息并返回JSON格式的价格评估结果。'
-              },
-              {
-                role: 'user',
-                content: `请分析这个商品的价格：${text}`
-              }
-            ],
-            max_tokens: 500,
-            temperature: 0.3
-          },
-          {
-            headers: {
-              'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-              'Content-Type': 'application/json',
-              'HTTP-Referer': 'https://secondhand-app.com',
-              'X-Title': 'Second Hand App'
+    call: async (text, task = 'valuation') => {
+      if (task === 'moderation') {
+        // 内容审核任务
+        try {
+          const response = await axios.post(
+            'https://openrouter.ai/api/v1/chat/completions',
+            {
+              model: 'openai/gpt-3.5-turbo',
+              messages: [
+                {
+                  role: 'system',
+                  content: '你是一个专业的内容审核专家。请分析以下商品描述是否适合在二手交易平台上销售。如果不适合，请说明原因。'
+                },
+                {
+                  role: 'user',
+                  content: `请审核这个商品描述是否适合销售：${text}`
+                }
+              ],
+              max_tokens: 300,
+              temperature: 0.3
             },
-            timeout: 15000
+            {
+              headers: {
+                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                'Content-Type': 'application/json',
+                'HTTP-Referer': 'https://secondhand-app.com',
+                'X-Title': 'Second Hand App'
+              },
+              timeout: 15000
+            }
+          );
+          return {
+            success: true,
+            data: response.data,
+            service: 'OpenRouter'
+          };
+        } catch (error) {
+          return {
+            success: false,
+            error: error.message,
+            service: 'OpenRouter'
+          };
+        }
+      } else {
+        // 价格评估任务
+        // 首先搜索eBay获取真实市场价格
+        let marketPriceInfo = '';
+        try {
+          const ebayResponse = await axios.get(
+            'https://api.ebay.com/buy/browse/v1/item_summary/search',
+            {
+              params: {
+                q: text.replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim(),
+                limit: 10
+              },
+              headers: {
+                'Authorization': 'Bearer v^1.1#i^1#r^0#I^3#f^0#p^1#t^H4sIAAAAAAAA/+VYbWwURRju9UtqLfzQaIMYyhYjFG9vdrd71116B9fWltN+0SulYCvO7s7Btvvlzh7tGcWzRiT8EAOJCSRiCSIJKFoDYoIfwUj8RQqoUcBEIZEUIwSMioEozl5LaSuhSM/YxPuzt++8887zPPO+M7MDkrl5JWsXrb1U4LkjszcJkpkeD5MP8nJz5k3NypyekwFGOHh6k7OT2T1ZA+UY6polNiFsmQZGRd26ZmAxZQxScdsQTYhVLBpQR1h0ZDEarqsVWRqIlm06pmxqVFGkKkgJAQHxMYEHfpaVZEEmVuNazGYzSCFGEhAMyAFO8JdyikDaMY6jiIEdaDhBigUs7wVlXpZpZjmR84sMoIGfX04VtSAbq6ZBXGhAhVJwxVRfewTWm0OFGCPbIUGoUCRcHW0IR6oeqW8u942IFRrSIepAJ45Hv1WaCipqgVoc3XwYnPIWo3FZRhhTvtDgCKODiuFrYG4DfkpqXuIENgCBLMmAL+NjaZGy2rR16Nwch2tRFW8s5Soiw1GdxHiKEjWkDiQ7Q2/1JESkqsh9LI5DTY2pyA5Sj1SEl4UbG6nQYhUa8ipkeMMRtJoIDr2NTVVeP2RkrhRJAvkHFBlI7NBAg9GGZB4zUqVpKKorGi6qN50KRFCjsdqwI7QhTg1Ggx2OOS6iYT+2GTDXNOQDy91JHZzFuLPKcOcV6USIotTr+DMw3NtxbFWKO2g4wtiGlERBClqWqlBjG1O5OJQ+3ThIrXIcS/T5urq66C6ONu2VPhYAxtdaVxslauqQIr5urQ/6q+N38KopKjIiPbEqOgmLYOkmuUoAGCupEM8FSgVmSPfRsEJjrX8zjODsG10R6aoQFkFWYpDAKmwAIYlJR4WEhpLU5+JAEkx4dWh3IsfSoIy8MsmzuI5sVRE5PsZyZTHkVfxCzFsqxGJeiVf8XiaGECBoyOpY9n8qlFtN9SiSbeSkJdfTluePVjQ149KGpTozz6lp6WxQElx1Q211XQdoxdFuQQm02uaS7sjqTj0cvNVquCH5Sk0lyjST8dMhgFvr6RNhkYkdpEyIXlQ2LdRoaqqcmFwTzNlKI7SdRBRpGjFMiGTYsiLpWavTRu8fLhO3xzt9e9R/tD/dkBV2U3ZysXL7YxIAWirt7kC0bOo+t9ZNSI4frnlFCvWEeKvk5DqpWBOSg2xVZfDISafo0ni1TNsIm3GbnLbpBvcE1mx2IoPsZ45tahqyWyaWAW4963rcgZKGJlthpyHBVTjJNlsmwPNljMAFwIR4yamtdMVkW5LSsRRn93hmjcu/CUFNn1zcLdtU4rJ7xvwXPhl8oy8wQhmpH9Pj+RT0eD7O9HhAOXiQKQazcrOWZGfdNR2rDqJVGKOxutIg3+U2ojtRwoKqnXl3Rv/UWuX5RbW/JqX4/qW/LCjLKBhxf9LbDgqHb1Dyspj8EdcpYMb1lhxm2n0FLA/KWIblOD8DloPi663ZzL3Z93w4veRq645aKWfKmXD52Y6208nCelAw7OTx5GSQyc6YfbRCPy4XP3uJ3zr7+OHNfVPa5jw5Vzx0vvfUEw+d9fa/cqHysUTNRyd2OtPeeqNpDt7xQutzR/KE/s0bIk3+q6+3P/3Vw+V9R7jz1qa2gft3x9YfO6fPP9a3fWP2loU/fN/+1NcDfd/1Lux8xndgzdaLn2S9+oFQvGb7m13BnSXvJDwHzzXtmb/h9/xlpzeGtRpOPXPuwrbLM1cc3dXimVt36IuTU9trM68efjHfXrZh24/7d4a3bXoJ/jQ/sP7bdRnvh/2NZy7NvHBw0/HPIj/v/m1BYTbsX9exb2DWxXdzzb73+k4+vu9E/h6q5NTn568s/ObOB3bVzUh++Wdb4R8HttBvD+y90r63b+5rl2uOvjw4l38BmbHpdtkSAAA=',
+                'Content-Type': 'application/json'
+              },
+              timeout: 10000
+            }
+          );
+          
+          if (ebayResponse.data && ebayResponse.data.itemSummaries) {
+            const prices = ebayResponse.data.itemSummaries
+              .filter(item => item.price && item.price.value)
+              .map(item => parseFloat(item.price.value))
+              .filter(price => price > 0);
+            
+            if (prices.length > 0) {
+              const minPrice = Math.min(...prices);
+              const maxPrice = Math.max(...prices);
+              const avgPrice = Math.round(prices.reduce((a, b) => a + b, 0) / prices.length);
+              
+              // 转换为澳元（大约1 USD = 1.5 AUD）
+              const minAUD = Math.round(minPrice * 1.5);
+              const maxAUD = Math.round(maxPrice * 1.5);
+              const avgAUD = Math.round(avgPrice * 1.5);
+              
+              marketPriceInfo = `根据eBay实时搜索，${text}的市场价格范围：$${minAUD}-$${maxAUD} AUD（平均$${avgAUD} AUD）。`;
+              console.log(`📊 eBay市场价格: $${minAUD}-$${maxAUD} AUD (平均$${avgAUD} AUD)`);
+            }
           }
-        );
-        return {
-          success: true,
-          data: response.data,
-          service: 'OpenRouter'
-        };
-      } catch (error) {
-        return {
-          success: false,
-          error: error.message,
-          service: 'OpenRouter'
-        };
+        } catch (ebayError) {
+          console.log('⚠️ eBay搜索失败:', ebayError.message);
+          marketPriceInfo = '无法获取实时市场价格，使用默认参考价格。';
+        }
+        try {
+          const response = await axios.post(
+            'https://openrouter.ai/api/v1/chat/completions',
+            {
+              model: 'openai/gpt-3.5-turbo',
+              messages: [
+                {
+                  role: 'system',
+                  content: '你是一个专业的二手商品价格评估专家。请分析以下商品信息并返回JSON格式的价格评估结果。重要：所有价格必须以澳元(AUD)为单位，不要使用美元或其他货币。'
+                },
+                {
+                  role: 'user',
+                  content: `${marketPriceInfo}请基于以上实时市场价格信息，分析这个商品的价格（请使用澳元AUD）：${text}`
+                }
+              ],
+              max_tokens: 500,
+              temperature: 0.3
+            },
+            {
+              headers: {
+                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                'Content-Type': 'application/json',
+                'HTTP-Referer': 'https://secondhand-app.com',
+                'X-Title': 'Second Hand App'
+              },
+              timeout: 15000
+            }
+          );
+          return {
+            success: true,
+            data: response.data,
+            service: 'OpenRouter'
+          };
+        } catch (error) {
+          return {
+            success: false,
+            error: error.message,
+            service: 'OpenRouter'
+          };
+        }
       }
     }
   },
@@ -105,13 +145,20 @@ const AI_SERVICES = {
     baseURL: 'https://api.cohere.ai/v1',
     model: 'command',
     isAvailable: () => !!process.env.COHERE_API_KEY,
-    call: async (text) => {
+    call: async (text, task = 'valuation') => {
       try {
+        let prompt;
+        if (task === 'moderation') {
+          prompt = `请审核这个商品描述是否适合在二手交易平台上销售：${text}`;
+        } else {
+          prompt = `分析这个二手商品的价格（请使用澳元AUD，不要使用美元）：${text}`;
+        }
+        
         const response = await axios.post(
           'https://api.cohere.ai/v1/generate',
           {
             model: 'command',
-            prompt: `分析这个二手商品的价格：${text}`,
+            prompt: prompt,
             max_tokens: 300,
             temperature: 0.3,
             k: 0,
@@ -147,8 +194,17 @@ const AI_SERVICES = {
     baseURL: 'https://api.openai.com/v1',
     model: 'gpt-4o',
     isAvailable: () => !!process.env.OPENAI_API_KEY,
-    call: async (text) => {
+    call: async (text, task = 'valuation') => {
       try {
+        let systemContent, userContent;
+        if (task === 'moderation') {
+          systemContent = '你是一个专业的内容审核专家。请分析以下商品描述是否适合在二手交易平台上销售。如果不适合，请说明原因。';
+          userContent = `请审核这个商品描述是否适合销售：${text}`;
+        } else {
+          systemContent = '你是一个专业的二手商品价格评估专家。请分析以下商品信息并返回JSON格式的价格评估结果。重要：所有价格必须以澳元(AUD)为单位，不要使用美元或其他货币。';
+          userContent = `请分析这个商品的价格（请使用澳元AUD）：${text}`;
+        }
+        
         const response = await axios.post(
           'https://api.openai.com/v1/chat/completions',
           {
@@ -156,11 +212,11 @@ const AI_SERVICES = {
             messages: [
               {
                 role: 'system',
-                content: '你是一个专业的二手商品价格评估专家。请分析以下商品信息并返回JSON格式的价格评估结果。'
+                content: systemContent
               },
               {
                 role: 'user',
-                content: `请分析这个商品的价格：${text}`
+                content: userContent
               }
             ],
             max_tokens: 500,
@@ -191,7 +247,7 @@ const AI_SERVICES = {
 };
 
 // 服务调用顺序
-const SERVICE_ORDER = ['HUGGING_FACE', 'OPENROUTER', 'COHERE', 'OPENAI'];
+const SERVICE_ORDER = ['OPENROUTER', 'COHERE', 'OPENAI'];
 
 /**
  * 多级AI服务调用器
@@ -249,7 +305,7 @@ async function callAIService(text, task = 'valuation') {
  */
 async function estimatePriceWithAIServices(title, description, category) {
   // 第一步：本地算法提供基础价格计算和规则引擎
-  const { getLocalEstimate } = require('./huggingFaceAI');
+  const { getLocalEstimate } = require('./priceEstimation');
   const localPrice = getLocalEstimate(title, category);
   
   console.log(`💰 本地算法基础价格: $${localPrice} AUD`);
@@ -268,66 +324,81 @@ async function estimatePriceWithAIServices(title, description, category) {
   if (!aiResult.fallbackUsed) {
     // AI服务成功，解析智能分析结果
     switch (aiResult.service) {
-             case 'Hugging Face':
-         if (aiResult.data && aiResult.data.labels && aiResult.data.scores) {
-           console.log(`🔍 Hugging Face 响应:`, aiResult.data);
-           const topScore = Math.max(...aiResult.data.scores);
-           const topLabel = aiResult.data.labels[aiResult.data.scores.indexOf(topScore)];
-           
-           console.log(`🔍 最高分数: ${topScore}, 标签: ${topLabel}`);
-           
-           if (topScore > 0.3) { // 降低阈值到0.3，提高AI使用率
-             aiAnalysis = {
-               service: 'Hugging Face',
-               confidence: topScore,
-               suggestion: `AI分析：${topLabel} (置信度: ${(topScore * 100).toFixed(1)}%)`,
-               adjustment: topLabel.includes('high value') ? 0.2 : 
-                          topLabel.includes('low value') ? -0.2 : 0
-             };
-             console.log(`✅ Hugging Face 分析成功: ${topLabel}, 调整${(aiAnalysis.adjustment * 100).toFixed(1)}%`);
-           } else {
-             console.log(`⚠️ Hugging Face 置信度太低: ${topScore}`);
-           }
-         } else {
-           console.log(`⚠️ Hugging Face 响应格式异常:`, aiResult.data);
-         }
-         break;
-        
-             case 'OpenRouter':
-       case 'OpenAI':
-         if (aiResult.data && aiResult.data.choices && aiResult.data.choices[0]) {
-           const content = aiResult.data.choices[0].message.content;
-           console.log(`🔍 AI响应内容: ${content}`);
-           try {
-             const jsonMatch = content.match(/\{.*\}/);
-             if (jsonMatch) {
-               const parsed = JSON.parse(jsonMatch[0]);
-               console.log(`🔍 解析的JSON:`, parsed);
-               const aiPrice = parsed.price || parsed.estimatedPrice || 0;
-               if (aiPrice > 0) {
-                 const priceRatio = aiPrice / localPrice;
-                 const adjustment = Math.max(-0.5, Math.min(1.0, priceRatio - 1));
-                 
-                 aiAnalysis = {
-                   service: aiResult.service,
-                   confidence: parsed.confidence || 0.7,
-                   suggestion: `AI建议价格: $${aiPrice} AUD`,
-                   adjustment: adjustment
-                 };
-                 console.log(`✅ AI分析成功: 价格$${aiPrice}, 调整${(adjustment * 100).toFixed(1)}%`);
-               } else {
-                 console.log(`⚠️ AI价格无效: ${aiPrice}`);
+      case 'OpenRouter':
+      case 'OpenAI':
+        if (aiResult.data && aiResult.data.choices && aiResult.data.choices[0]) {
+          const content = aiResult.data.choices[0].message.content;
+          console.log(`🔍 AI响应内容: ${content}`);
+          try {
+            // 尝试多种方式解析价格
+            let aiPrice = 0;
+            
+            // 方法1：尝试解析JSON
+            const jsonMatch = content.match(/\{.*\}/);
+            if (jsonMatch) {
+              try {
+                const parsed = JSON.parse(jsonMatch[0]);
+                console.log(`🔍 解析的JSON:`, parsed);
+                aiPrice = parsed.price || parsed.estimatedPrice || parsed.预估价格 || 0;
+              } catch (jsonError) {
+                console.log('JSON解析失败，尝试其他方法');
+              }
+            }
+            
+                         // 方法2：从中文响应中提取价格
+             if (!aiPrice) {
+               const priceMatch = content.match(/预估价格[：:]\s*\$?(\d+)/);
+               if (priceMatch) {
+                 aiPrice = parseInt(priceMatch[1]);
                }
-             } else {
-               console.log(`⚠️ 未找到JSON格式响应`);
              }
-           } catch (e) {
-             console.log('解析AI响应JSON失败:', e.message);
-           }
-         } else {
-           console.log(`⚠️ AI响应格式异常:`, aiResult.data);
-         }
-         break;
+             
+             // 方法2.5：从中文响应中提取澳元价格
+             if (!aiPrice) {
+               const audMatch = content.match(/(\d+)\s*澳元/);
+               if (audMatch) {
+                 aiPrice = parseInt(audMatch[1]);
+               }
+             }
+            
+            // 方法3：提取任何美元价格
+            if (!aiPrice) {
+              const dollarMatch = content.match(/\$(\d+)/);
+              if (dollarMatch) {
+                aiPrice = parseInt(dollarMatch[1]);
+              }
+            }
+            
+            // 方法4：提取数字价格
+            if (!aiPrice) {
+              const numberMatch = content.match(/(\d+)\s*-\s*(\d+)/);
+              if (numberMatch) {
+                // 取平均值
+                aiPrice = Math.round((parseInt(numberMatch[1]) + parseInt(numberMatch[2])) / 2);
+              }
+            }
+            
+            if (aiPrice > 0) {
+              const priceRatio = aiPrice / localPrice;
+              const adjustment = Math.max(-0.5, Math.min(1.0, priceRatio - 1));
+              
+              aiAnalysis = {
+                service: aiResult.service,
+                confidence: 0.7,
+                suggestion: `AI建议价格: $${aiPrice} AUD`,
+                adjustment: adjustment
+              };
+              console.log(`✅ AI分析成功: 价格$${aiPrice}, 调整${(adjustment * 100).toFixed(1)}%`);
+            } else {
+              console.log(`⚠️ 无法从AI响应中提取有效价格`);
+            }
+          } catch (e) {
+            console.log('解析AI响应失败:', e.message);
+          }
+        } else {
+          console.log(`⚠️ AI响应格式异常:`, aiResult.data);
+        }
+        break;
         
       case 'Cohere':
         if (aiResult.data && aiResult.data.generations && aiResult.data.generations[0]) {
@@ -406,11 +477,24 @@ async function moderateContentWithAIServices(text) {
     };
   }
 
-  // 本地敏感词检查
-  const sensitiveKeywords = [
-    '暴力', '色情', '赌博', '毒品', '违法', '犯罪',
-    'violence', 'porn', 'gambling', 'drugs', 'illegal', 'crime'
-  ];
+     // 本地敏感词检查
+   const sensitiveKeywords = [
+     // 暴力相关
+     '暴力', '刀具', '锋利', '防身', '武器', '枪', '刀', '剑',
+     'violence', 'knife', 'knives', 'weapon', 'gun', 'sword',
+     
+     // 色情相关
+     '色情', '成人用品', '私密', '情趣', '性', 'porn', 'adult', 'sex',
+     
+     // 赌博相关
+     '赌博', '老虎机', '赌场', '博彩', 'gambling', 'casino', 'slot machine',
+     
+     // 毒品相关
+     '毒品', '违禁药品', '特殊渠道', 'drugs', 'illegal medicine',
+     
+     // 其他违法内容
+     '违法', '犯罪', 'illegal', 'crime'
+   ];
   
   const foundSensitiveKeywords = sensitiveKeywords.filter(keyword => 
     textLower.includes(keyword.toLowerCase())
@@ -446,34 +530,6 @@ async function moderateContentWithAIServices(text) {
   let aiService = 'Local Only';
   
   switch (aiResult.service) {
-    case 'Hugging Face':
-      if (aiResult.data && aiResult.data.labels && aiResult.data.scores) {
-        console.log(`🔍 Hugging Face 审核响应:`, aiResult.data);
-        const topScore = Math.max(...aiResult.data.scores);
-        const topLabel = aiResult.data.labels[aiResult.data.scores.indexOf(topScore)];
-        
-        console.log(`🔍 最高分数: ${topScore}, 标签: ${topLabel}`);
-        
-        // 调整置信度阈值：从0.4降低到0.3，提高AI使用率
-        if (topScore > 0.3) {
-          // 对于内容审核，我们使用不同的标签
-          const inappropriateLabels = ['inappropriate content', 'violation', 'sensitive content'];
-          const isInappropriate = inappropriateLabels.some(label => 
-            topLabel.toLowerCase().includes(label.toLowerCase())
-          );
-          
-          if (isInappropriate) {
-            isAppropriate = false;
-            reason = `AI深度分析: ${topLabel} (置信度: ${(topScore * 100).toFixed(1)}%)`;
-          }
-          aiService = 'Hugging Face';
-          console.log(`✅ Hugging Face 审核成功: ${topLabel}, 结果: ${isAppropriate ? '通过' : '拒绝'}`);
-        } else {
-          console.log(`⚠️ Hugging Face 置信度太低: ${topScore}，使用本地算法`);
-        }
-      }
-      break;
-      
     case 'OpenRouter':
     case 'OpenAI':
       if (aiResult.data && aiResult.data.choices && aiResult.data.choices[0]) {

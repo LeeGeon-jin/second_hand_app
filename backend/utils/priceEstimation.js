@@ -2,10 +2,6 @@ const axios = require('axios');
 const { getComparablePrices } = require('./marketData');
 const { estimatePriceWithAIServices } = require('./aiServiceManager');
 
-// Hugging Face Inference API配置
-const HF_API_URL = 'https://api-inference.huggingface.co/models';
-const HF_MODEL = 'facebook/bart-large-mnli'; // 使用文本分类模型
-
 // 本地估价逻辑（备用方案）- 优化后的价格基础
 function getLocalEstimate(title, category) {
   // 基础价格表（基于真实澳洲二手市场价格调研）- 二手价格调整

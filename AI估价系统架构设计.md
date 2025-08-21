@@ -62,7 +62,7 @@ function cleanupExpired() {
 ### 3. 多级AI服务 (`aiServiceManager.js`)
 ```javascript
 // 服务优先级配置
-const SERVICE_ORDER = ['HUGGING_FACE', 'OPENROUTER', 'COHERE', 'OPENAI'];
+const SERVICE_ORDER = ['OPENROUTER', 'COHERE', 'OPENAI'];
 
 // 智能降级调用
 async function callAIService(text, task) {
@@ -108,9 +108,12 @@ let localPrice = basePrice * brandMultiplier * conditionMultiplier;
 
 // AI调整：语义分析
 let adjustment = 0;
-if (aiResult.service === 'Hugging Face') {
-  if (topLabel.includes('high value')) adjustment = 0.2;
-  else if (topLabel.includes('low value')) adjustment = -0.2;
+if (aiResult.service === 'OpenRouter' || aiResult.service === 'OpenAI') {
+  const aiPrice = parsed.price || parsed.estimatedPrice || 0;
+  if (aiPrice > 0) {
+    const priceRatio = aiPrice / localPrice;
+    adjustment = Math.max(-0.5, Math.min(1.0, priceRatio - 1));
+  }
 }
 
 // 最终价格计算
@@ -130,18 +133,19 @@ const QUOTA_TTL_MS = 24 * 60 * 60 * 1000;  // 24小时TTL
 ### AI服务配置
 ```javascript
 const AI_SERVICES = {
-  HUGGING_FACE: {
-    name: 'Hugging Face',
-    apiKey: process.env.HUGGING_FACE_TOKEN,
-    call: async (text, task) => {
-      // 零样本分类调用
+  OPENROUTER: {
+    name: 'OpenRouter',
+    apiKey: process.env.OPENROUTER_API_KEY,
+    call: async (text) => {
+      // GPT-3.5-turbo调用
       const response = await axios.post(
-        'https://api-inference.huggingface.co/models/facebook/bart-large-mnli',
+        'https://openrouter.ai/api/v1/chat/completions',
         {
-          inputs: text,
-          parameters: {
-            candidate_labels: ['high value product', 'mid value product', 'low value product']
-          }
+          model: 'openai/gpt-3.5-turbo',
+          messages: [
+            { role: 'system', content: '你是一个专业的二手商品价格评估专家...' },
+            { role: 'user', content: `请分析这个商品的价格：${text}` }
+          ]
         }
       );
       return response.data;
