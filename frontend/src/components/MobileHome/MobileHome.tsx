@@ -8,6 +8,39 @@ import MobileFooter from './MobileFooter';
 import './MobileFooter.css';
 import './MobileHome.css';
 
+// 防止缩放的JavaScript代码
+const preventZoom = () => {
+  // 禁用双击缩放
+  let lastTouchEnd = 0;
+  document.addEventListener('touchend', function (event) {
+    const now = (new Date()).getTime();
+    if (now - lastTouchEnd <= 300) {
+      event.preventDefault();
+    }
+    lastTouchEnd = now;
+  }, false);
+
+  // 禁用双指缩放
+  document.addEventListener('gesturestart', function (event) {
+    event.preventDefault();
+  });
+
+  document.addEventListener('gesturechange', function (event) {
+    event.preventDefault();
+  });
+
+  document.addEventListener('gestureend', function (event) {
+    event.preventDefault();
+  });
+
+  // 禁用键盘缩放
+  document.addEventListener('keydown', function (event) {
+    if (event.ctrlKey && (event.key === '+' || event.key === '-' || event.key === '0')) {
+      event.preventDefault();
+    }
+  });
+};
+
 // 示例分类，可后端动态获取
 const defaultCategories = [
   '推荐', '家具', '电器', '电子产品', '文具', '服饰', '运动', '母婴', '美妆', '乐器', '图书', '宠物', '更多'
@@ -89,6 +122,11 @@ const MobileHome: React.FC = () => {
         : item
     ));
   };
+
+  // 防止缩放
+  useEffect(() => {
+    preventZoom();
+  }, []);
 
   // 获取商品
   useEffect(() => {

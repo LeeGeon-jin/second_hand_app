@@ -1,3 +1,23 @@
+/* 全局禁止缩放样式 */
+html {
+  min-width: 375px;
+  overflow-x: auto;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  touch-action: manipulation;
+}
+
+body {
+  min-width: 375px;
+  overflow-x: auto;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+
 /* 移动端首页样式 */
 .mobile-home {
   background: #fff;
@@ -6,6 +26,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+  /* 禁止缩小，只允许放大 */
+  min-width: 375px;
 }
 
 .mh-header {
@@ -19,6 +44,8 @@
   justify-content: center;
   align-items: center;
   gap: 12px;
+  box-sizing: border-box;
+  min-width: 375px;
 }
 
 .mh-search-bar {
@@ -32,6 +59,7 @@
   width: 70%;
   max-width: 360px;
   height: 40px;
+  flex-shrink: 0;
 }
 
 .mh-search-bar.focused {
@@ -50,15 +78,27 @@
   height: 40px;
   display: flex;
   align-items: center;
+  flex-shrink: 0;
 }
 
+/* 分类标签栏 - 修复滑动功能 */
 .mh-cat-bar {
   display: flex;
   overflow-x: auto;
   white-space: nowrap;
-  padding: 8px 0 0 0;
+  padding: 8px 12px 0 12px;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  width: 100%;
+  box-sizing: border-box;
+  /* 确保滑动流畅 */
+  scroll-behavior: smooth;
+  /* 防止垂直滚动 */
+  overflow-y: hidden;
+  /* 固定高度 */
+  height: 40px;
+  align-items: center;
+  min-width: 375px;
 }
 
 .mh-cat-bar::-webkit-scrollbar {
@@ -66,18 +106,25 @@
 }
 
 .mh-cat-item {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   padding: 0 16px;
   font-size: 16px;
   color: #bbb;
   cursor: pointer;
   transition: color 0.2s;
   line-height: 32px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  height: 32px;
+  border-radius: 16px;
+  margin-right: 8px;
 }
 
 .mh-cat-item.active {
   color: #222;
   font-weight: 600;
+  background: #f2f3f5;
 }
 
 .mh-cat-arrow {
@@ -87,6 +134,8 @@
   color: #bbb;
   font-size: 18px;
   cursor: pointer;
+  flex-shrink: 0;
+  height: 32px;
 }
 
 .mh-cat-popup {
@@ -114,15 +163,21 @@
   font-weight: 600;
 }
 
-/* 商品列表 - 瀑布流布局（每行2个） */
+/* 商品列表 - 强制两列布局 */
 .mh-list {
   padding: 16px;
   width: 100%;
-  column-count: 2;
-  column-gap: 12px;
-  max-width: 100%;
+  max-width: 100vw;
   box-sizing: border-box;
-  min-height: 200px; /* 确保即使没有商品也有最小高度 */
+  min-height: 200px;
+  /* 强制使用CSS Grid，确保两列布局 */
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  /* 确保在小屏幕上也能正常显示 */
+  overflow-x: hidden;
+  /* 设置最小宽度，防止布局错乱 */
+  min-width: 375px;
 }
 
 /* 商品卡片 */
@@ -136,8 +191,11 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   height: auto;
   width: 100%;
-  break-inside: avoid;
-  margin-bottom: 12px;
+  margin-bottom: 0;
+  /* 确保卡片不会被压缩 */
+  min-width: 0;
+  /* 防止卡片被拉伸 */
+  max-width: 100%;
 }
 
 .mh-card-img-wrap {
@@ -147,25 +205,28 @@
   position: relative;
   display: flex;
   align-items: flex-start;
+  aspect-ratio: 1;
 }
 
 .mh-card-img {
   width: 100%;
-  height: auto;
+  height: 100%;
   display: block;
-  object-position: top;
+  object-fit: cover;
+  object-position: center;
 }
 
 /* 图片占位符 */
 .mh-card-img-placeholder {
   width: 100%;
-  min-height: 200px;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #f8f9fa;
   color: #adb5bd;
   font-size: 12px;
+  aspect-ratio: 1;
 }
 
 .mh-card-img-placeholder svg {
@@ -201,12 +262,15 @@
   justify-content: space-between;
   padding: 8px 12px 8px 12px;
   width: 100%;
+  box-sizing: border-box;
 }
 
 .mh-card-user {
   display: flex;
   align-items: center;
   cursor: pointer;
+  flex: 1;
+  min-width: 0;
 }
 
 .mh-card-avatar {
@@ -214,11 +278,15 @@
   height: 24px;
   border-radius: 50%;
   margin-right: 6px;
+  flex-shrink: 0;
 }
 
 .mh-card-nick {
   font-size: 14px;
   color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .mh-card-like {
@@ -227,6 +295,7 @@
   color: #ff3141;
   font-size: 16px;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .mh-card-like-count {
@@ -275,6 +344,7 @@
   padding: 0 60px;
   box-sizing: border-box;
   text-align: center;
+  min-width: 375px;
 }
 
 .mh-footer-item {
@@ -309,4 +379,82 @@
   align-items: center;
   justify-content: center;
   z-index: 101;
+}
+
+/* 响应式设计 - 确保在任何缩放比例下都能正常显示 */
+@media (max-width: 480px) {
+  .mh-list {
+    padding: 12px;
+    gap: 8px;
+    /* 强制保持两列 */
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .mh-card-title {
+    font-size: 14px;
+    padding: 6px 8px 0 8px;
+  }
+  
+  .mh-card-price {
+    font-size: 14px;
+  }
+  
+  .mh-card-bottom {
+    padding: 6px 8px 8px 8px;
+  }
+  
+  .mh-cat-item {
+    font-size: 14px;
+    padding: 0 12px;
+  }
+}
+
+/* 超小屏幕 - 仍然保持两列 */
+@media (max-width: 360px) {
+  .mh-list {
+    /* 强制保持两列，不改为单列 */
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    padding: 8px;
+  }
+  
+  .mh-header {
+    padding: 8px 8px 0 8px;
+  }
+  
+  .mh-search-bar {
+    width: 60%;
+  }
+  
+  .mh-card-title {
+    font-size: 12px;
+  }
+  
+  .mh-card-price {
+    font-size: 12px;
+  }
+}
+
+/* 禁止缩小的全局设置 */
+html {
+  min-width: 375px;
+  overflow-x: auto;
+}
+
+body {
+  min-width: 375px;
+  overflow-x: auto;
+}
+
+/* 确保viewport设置正确 */
+@media screen and (max-width: 375px) {
+  .mobile-home {
+    width: 375px;
+    min-width: 375px;
+  }
+  
+  .mh-list {
+    width: 375px;
+    min-width: 375px;
+  }
 }
