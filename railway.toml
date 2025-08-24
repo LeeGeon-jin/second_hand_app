@@ -8,6 +8,12 @@ healthcheckTimeout = 300
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 10
 
+# 后端服务
 [[services]]
 name = "backend-api"
 sourceDir = "backend"
+
+# 前端服务
+[[services]]
+name = "frontend-app"
+sourceDir = "frontend-deploy"
