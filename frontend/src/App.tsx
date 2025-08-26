@@ -8,6 +8,7 @@ import Login from './components/Auth/Login.tsx';
 import Register from './components/Auth/Register.tsx';
 import UserProfile from './components/Profile/UserProfile.tsx';
 import ProductFormMobile from './components/ProductForm/ProductFormMobile.tsx';
+import ProductDetail from './components/ProductDetail/ProductDetail.tsx';
 import { Popup } from 'antd-mobile';
 
 const App: React.FC = () => {
@@ -27,6 +28,7 @@ const App: React.FC = () => {
           <Route path="/profile" element={<UserProfile />} />
           <Route path="/messages" element={<MessageList />} />
           <Route path="/chat/:chatId" element={<ChatWindow />} />
+          <Route path="/product/:productId" element={<ProductDetail />} />
           <Route path="/*" element={<MobileHome />} />
         </Routes>
       </BrowserRouter>
@@ -36,7 +38,7 @@ const App: React.FC = () => {
         position="bottom"
         bodyStyle={{ borderTopLeftRadius: 16, borderTopRightRadius: 16, minHeight: '60vh' }}
       >
-        <ProductFormMobile />
+        <ProductFormMobile onClose={() => setShowPost(false)} />
       </Popup>
     </>
   );

@@ -3,7 +3,11 @@ import { Form, Input, TextArea, Button, Toast, Selector, Space, Tag, Popup, List
 import ProductImageUploader from './ProductImageUploader';
 import api from '../../api';
 
-const ProductFormMobile: React.FC = () => {
+interface ProductFormMobileProps {
+  onClose?: () => void;
+}
+
+const ProductFormMobile: React.FC<ProductFormMobileProps> = ({ onClose }) => {
   const [images, setImages] = useState<string[]>([]);
   
   // 过滤掉blob URL的辅助函数
@@ -449,7 +453,50 @@ const ProductFormMobile: React.FC = () => {
   ];
 
   return (
-    <div style={{ padding: 16 }}>
+    <div style={{ padding: '8px 12px', maxHeight: '100vh', overflowY: 'auto' }}>
+      {/* 关闭按钮 */}
+      <div style={{ 
+        position: 'sticky', 
+        top: 0, 
+        zIndex: 100, 
+        background: '#fff', 
+        padding: '8px 0',
+        borderBottom: '1px solid #f0f0f0',
+        marginBottom: '12px'
+      }}>
+        <button
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            right: 0,
+            top: '8px',
+            width: '32px',
+            height: '32px',
+            borderRadius: '50%',
+            border: 'none',
+            background: '#f5f5f5',
+            color: '#666',
+            fontSize: '18px',
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 101
+          }}
+        >
+          ✕
+        </button>
+        <div style={{ 
+          textAlign: 'center', 
+          fontSize: '16px', 
+          fontWeight: 'bold',
+          color: '#333'
+        }}>
+          发布商品
+        </div>
+      </div>
+      
       <ProductImageUploader 
         value={images} 
         onChange={(newImages) => {
@@ -494,7 +541,7 @@ const ProductFormMobile: React.FC = () => {
           <Input placeholder="如：九成新小米手机" />
         </Form.Item>
         <Form.Item name="category" label="商品类别" rules={[{ required: true, message: '请选择类别' }]}>
-          <Selector options={categoryOptions} columns={6} />
+          <Selector options={categoryOptions} columns={3} />
         </Form.Item>
         <Form.Item name="price" label="价格" rules={[{ required: true, message: '请输入价格' }]}>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>

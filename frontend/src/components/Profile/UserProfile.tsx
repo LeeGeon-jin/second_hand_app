@@ -4,7 +4,7 @@ import React from 'react';
 import { Card, Button } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import MobileFooter from '../MobileHome/MobileFooter';
-import '../MobileHome/MobileFooter.css';
+
 
 const UserProfile: React.FC = () => {
   const navigate = useNavigate();

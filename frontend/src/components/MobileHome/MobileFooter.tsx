@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import './MobileFooter.css';
+
 
 const MobileFooter: React.FC = () => {
   const location = useLocation();

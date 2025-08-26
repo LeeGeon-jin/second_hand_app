@@ -1,0 +1,542 @@
+.product-detail {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background: #fff;
+  z-index: 1000;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Header */
+.pd-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  z-index: 1001;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.pd-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pd-back-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: #333;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+}
+
+.pd-back-btn::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  width: 12px;
+  height: 2px;
+  background: #333;
+  transform: translateY(-50%) rotate(-45deg);
+  transform-origin: left center;
+}
+
+.pd-back-btn::after {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  width: 12px;
+  height: 2px;
+  background: #333;
+  transform: translateY(-50%) rotate(45deg);
+  transform-origin: left center;
+}
+
+.pd-user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 20px;
+  transition: background-color 0.2s;
+}
+
+.pd-user-info:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.pd-user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.pd-user-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.pd-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pd-message-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #ff6b6b, #ff4757);
+  color: white;
+  border: none;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(255, 71, 87, 0.3);
+}
+
+.pd-message-btn:hover {
+  background: linear-gradient(135deg, #ff5252, #ff3742);
+  box-shadow: 0 4px 12px rgba(255, 71, 87, 0.4);
+  transform: translateY(-1px);
+}
+
+.pd-share-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: transparent;
+  color: #333;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.pd-share-btn:hover {
+  transform: scale(1.05);
+}
+
+.pd-share-btn svg {
+  width: 42px;
+  height: 42px;
+}
+
+/* 图片区域 */
+.pd-image-container {
+  position: relative;
+  width: 100%;
+  height: 75vh;
+  background: #f8f8f8;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.pd-image-container:hover {
+  background: #f0f0f0;
+}
+
+.pd-main-image {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.pd-image-indicators {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+
+.pd-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  transition: background-color 0.3s;
+}
+
+.pd-indicator.active {
+  background: #fff;
+}
+
+.pd-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: rgba(0, 0, 0, 0.3);
+  color: #fff;
+  border-radius: 50%;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: background-color 0.2s;
+}
+
+.pd-nav-btn:hover {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.pd-nav-left {
+  left: 16px;
+}
+
+.pd-nav-right {
+  right: 16px;
+}
+
+/* 内容区域 */
+.pd-content {
+  padding: 16px;
+  padding-top: 20px;
+}
+
+.pd-title-section {
+  margin-bottom: 20px;
+}
+
+.pd-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 8px 0;
+  line-height: 1.4;
+}
+
+.pd-price {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ff4757;
+}
+
+.pd-description {
+  margin-bottom: 20px;
+}
+
+.pd-description h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 8px 0;
+}
+
+.pd-description p {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.pd-location {
+  margin-bottom: 20px;
+}
+
+.pd-location h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 8px 0;
+}
+
+.pd-location-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border: 1px solid #e0e0e0;
+  background: #fff;
+  border-radius: 8px;
+  color: #333;
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.pd-location-btn:hover {
+  border-color: #ff4757;
+}
+
+/* 评论区 */
+.pd-comments-section {
+  margin-bottom: 80px;
+}
+
+.pd-comments-section h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 16px 0;
+}
+
+.pd-comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pd-no-comments {
+  text-align: center;
+  color: #999;
+  font-size: 14px;
+  padding: 40px 0;
+}
+
+.pd-comment {
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.pd-comment:last-child {
+  border-bottom: none;
+}
+
+.pd-comment-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.pd-comment-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.pd-comment-username {
+  font-size: 12px;
+  font-weight: 500;
+  color: #333;
+}
+
+.pd-comment-time {
+  font-size: 11px;
+  color: #999;
+}
+
+.pd-comment-content {
+  font-size: 14px;
+  color: #333;
+  line-height: 1.5;
+}
+
+/* Footer */
+.pd-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: #fff;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  z-index: 1001;
+}
+
+.pd-comment-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 20px;
+  border: none;
+  background: #f8f8f8;
+  border-radius: 24px;
+  color: #333;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  min-width: 120px;
+  justify-content: center;
+}
+
+.pd-comment-btn:hover {
+  background: #e8e8e8;
+}
+
+.pd-stats {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.pd-collect-btn,
+.pd-comments-count-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  color: #666;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 16px;
+  transition: background-color 0.2s;
+}
+
+.pd-collect-btn:hover,
+.pd-comments-count-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.pd-collect-btn.collected {
+  color: #ff4757;
+}
+
+/* 评论弹窗 */
+.pd-comment-popup {
+  padding: 20px;
+  background: #fff;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+}
+
+.pd-comment-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.pd-comment-popup-header span {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.pd-comment-close-btn {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: #999;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.pd-comment-input-container {
+  margin-bottom: 16px;
+}
+
+.pd-comment-submit-btn {
+  width: 100%;
+  height: 40px;
+  background: #ff4757;
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.pd-comment-submit-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* 加载和错误状态 */
+.product-detail-loading,
+.product-detail-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  gap: 16px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f0f0f0;
+  border-top: 3px solid #ff4757;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 响应式设计 */
+@media (max-width: 480px) {
+  .pd-image-container {
+    height: 70vh;
+  }
+  
+  .pd-content {
+    padding: 12px;
+    padding-top: 15px;
+  }
+  
+  .pd-title {
+    font-size: 18px;
+  }
+  
+  .pd-price {
+    font-size: 20px;
+  }
+  
+  .pd-footer {
+    height: 50px;
+    padding: 0 12px;
+  }
+  
+  .pd-comment-btn {
+    padding: 10px 16px;
+    font-size: 14px;
+    min-width: 100px;
+  }
+}

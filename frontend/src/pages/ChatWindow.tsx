@@ -5,10 +5,10 @@ import axios from 'axios';
 
 interface Message {
   _id: string;
-  sender: string;
   content: string;
+  sender: string;
+  timestamp: string;
   type: 'text' | 'image';
-  createdAt: string;
 }
 
 interface ChatInfo {
@@ -109,17 +109,17 @@ const Input = styled.input`
 `;
 
 const SendButton = styled.button<{ active: boolean }>`
-  border: none;
   background: ${props => props.active ? '#ff2442' : '#ccc'};
   color: #fff;
-  padding: 8px 16px;
-  border-radius: 16px;
-  font-size: 14px;
-  cursor: ${props => props.active ? 'pointer' : 'default'};
-  
-  &:active {
-    opacity: ${props => props.active ? 0.8 : 1};
-  }
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: ${props => props.active ? 'pointer' : 'not-allowed'};
+  font-size: 18px;
 `;
 
 const ChatWindow: React.FC = () => {
@@ -204,7 +204,7 @@ const ChatWindow: React.FC = () => {
             <Avatar 
               src={message.sender === '当前用户ID' 
                 ? '/my-avatar.png' 
-                : otherUser?.avatar || '/default-avatar.png'
+                : otherUser?.avatar || '/default-avatar.svg'
               } 
               alt="avatar"
             />

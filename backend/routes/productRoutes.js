@@ -198,4 +198,63 @@ router.delete('/:id', auth, async (req, res) => {
   res.json({ message: '删除成功' });
 });
 
+// 收藏商品
+router.post('/:id/collect', auth, async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ message: '商品不存在' });
+
+    const User = require('../models/User');
+    const user = await User.findById(req.user.id);
+    
+    if (!user.collectedProducts) {
+      user.collectedProducts = [];
+    }
+
+    const isCollected = user.collectedProducts.includes(product._id);
+    
+    if (isCollected) {
+      // 取消收藏
+      user.collectedProducts = user.collectedProducts.filter(id => id.toString() !== product._id.toString());
+      product.collectCount = Math.max(0, (product.collectCount || 0) - 1);
+    } else {
+      // 添加收藏
+      user.collectedProducts.push(product._id);
+      product.collectCount = (product.collectCount || 0) + 1;
+    }
+
+    await user.save();
+    await product.save();
+
+    res.json({ 
+      isCollected: !isCollected, 
+      collectCount: product.collectCount 
+    });
+  } catch (error) {
+    console.error('收藏失败:', error);
+    res.status(500).json({ message: '收藏失败' });
+  }
+});
+
+// 获取商品的交互状态（收藏）
+router.get('/:id/interaction', auth, async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ message: '商品不存在' });
+
+    const User = require('../models/User');
+    const user = await User.findById(req.user.id);
+    
+    const isCollected = user.collectedProducts && user.collectedProducts.includes(product._id);
+
+    res.json({
+      isCollected: !!isCollected,
+      collectCount: product.collectCount || 0
+    });
+  } catch (error) {
+    console.error('获取交互状态失败:', error);
+    res.status(500).json({ message: '获取交互状态失败' });
+  }
+});
+
 module.exports = router;

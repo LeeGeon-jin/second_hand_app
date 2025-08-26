@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import MobileFooter from '../components/MobileHome/MobileFooter';
-const emptyMessageImg = '/empty-message.png';
-import { useNavigate } from 'react-router-dom';
 import styled from '@emotion/styled';
-import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import './MessageList.css';
 
 interface Chat {
   _id: string;
@@ -12,9 +10,9 @@ interface Chat {
     username: string;
     avatar?: string;
   }[];
-  lastMessage?: {
+  lastMessage: {
     content: string;
-    createdAt: string;
+    timestamp: string;
     type: 'text' | 'image';
   };
   unreadCount?: number;
@@ -162,7 +160,7 @@ const MessageList: React.FC = () => {
               return (
                 <ChatItem key={chat._id} onClick={() => handleChatClick(chat._id)}>
                   <Avatar 
-                    src={otherUser?.avatar || '/default-avatar.png'} 
+                    src={otherUser?.avatar || '/default-avatar.svg'} 
                     alt={otherUser?.username} 
                   />
                   <Info>
@@ -171,7 +169,7 @@ const MessageList: React.FC = () => {
                         {otherUser?.username}
                         {chat.unreadCount ? <UnreadBadge>{chat.unreadCount}</UnreadBadge> : null}
                       </Username>
-                      <Time>{chat.lastMessage && formatTime(chat.lastMessage.createdAt)}</Time>
+                      <Time>{chat.lastMessage && formatTime(chat.lastMessage.timestamp)}</Time>
                     </Header>
                     <LastMessage>
                     {chat.lastMessage?.content || '暂时没有消息'}

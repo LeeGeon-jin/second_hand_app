@@ -5,7 +5,6 @@ import { Divider, Toast, Popup } from 'antd-mobile';
 import { DownOutline, HeartOutline, HeartFill } from 'antd-mobile-icons';
 import { useNavigate } from 'react-router-dom';
 import MobileFooter from './MobileFooter';
-import './MobileFooter.css';
 import './MobileHome.css';
 
 // 防止缩放的JavaScript代码
@@ -272,10 +271,10 @@ const MobileHome: React.FC = () => {
             const price = item.price || 0;
             return (
               <div className="mh-card" key={item.id || item._id || Math.random()}>
-                <div className="mh-card-img-wrap" onClick={() => Toast.show({ content: '进入详情' })}>
+                <div className="mh-card-img-wrap" onClick={() => navigate(`/product/${item.id || item._id}`)}>
                   <img className="mh-card-img" src={img} alt={title} />
                 </div>
-                <div className="mh-card-title" onClick={() => Toast.show({ content: '进入详情' })}>{title}</div>
+                <div className="mh-card-title" onClick={() => navigate(`/product/${item.id || item._id}`)}>{title}</div>
                 <div className="mh-card-price">{formatPrice(price)}</div>
                 <div className="mh-card-bottom">
                   <div className="mh-card-user" onClick={() => Toast.show({ content: '用户信息' })}>

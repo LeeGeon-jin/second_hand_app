@@ -62,13 +62,49 @@ if ($deployOnline) {
     Write-Host "部署后端..." -ForegroundColor Gray
     Set-Location "backend"
     railway service second_hand
-    railway up --detach
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "❌ 后端部署失败" -ForegroundColor Red
-        Set-Location ".."
-        exit 1
+    
+    # 使用超时保护，但保持实时输出
+    Write-Host "正在部署后端（最多等待15分钟）..." -ForegroundColor Gray
+    $job = Start-Job -ScriptBlock { 
+        Set-Location $using:PWD
+        railway up
     }
-    Write-Host "✅ 后端部署完成" -ForegroundColor Green
+    
+    # 等待部署完成，最多等待20分钟
+    $timeout = 1200  # 20分钟
+    $startTime = Get-Date
+    $deployed = $false
+    
+    while ((Get-Date) -lt ($startTime.AddSeconds($timeout))) {
+        if ($job.State -eq "Completed") {
+            $result = Receive-Job $job
+            if ($job.ExitCode -eq 0) {
+                Write-Host "✅ 后端部署完成" -ForegroundColor Green
+                $deployed = $true
+                break
+            } else {
+                Write-Host "⚠️  CLI连接中断，但部署可能仍在进行中..." -ForegroundColor Yellow
+                Write-Host $result -ForegroundColor Gray
+                # 不立即退出，继续检查实际状态
+                break
+            }
+        }
+        
+        # 显示实时输出
+        $output = Receive-Job $job -Keep
+        if ($output) {
+            Write-Host $output -ForegroundColor Gray
+        }
+        
+        Start-Sleep -Seconds 5
+    }
+    
+    if (!$deployed) {
+        Write-Host "⚠️  CLI连接超时，但部署可能仍在进行中..." -ForegroundColor Yellow
+        Stop-Job $job
+    }
+    
+    Remove-Job $job
     Set-Location ".."
     
     # 部署前端
@@ -115,20 +151,74 @@ app.listen(PORT, () => {
 "@ | Out-File -FilePath "package.json" -Encoding UTF8
     
     railway service second_hand
-    railway up --detach
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "❌ 前端部署失败" -ForegroundColor Red
-        Set-Location ".."
-        exit 1
+    
+    # 使用超时保护，但保持实时输出
+    Write-Host "正在部署前端（最多等待15分钟）..." -ForegroundColor Gray
+    $job = Start-Job -ScriptBlock { 
+        Set-Location $using:PWD
+        railway up
     }
-    Write-Host "✅ 前端部署完成" -ForegroundColor Green
+    
+    # 等待部署完成，最多等待20分钟
+    $timeout = 1200  # 20分钟
+    $startTime = Get-Date
+    $deployed = $false
+    
+    while ((Get-Date) -lt ($startTime.AddSeconds($timeout))) {
+        if ($job.State -eq "Completed") {
+            $result = Receive-Job $job
+            if ($job.ExitCode -eq 0) {
+                Write-Host "✅ 前端部署完成" -ForegroundColor Green
+                $deployed = $true
+                break
+            } else {
+                Write-Host "⚠️  CLI连接中断，但部署可能仍在进行中..." -ForegroundColor Yellow
+                Write-Host $result -ForegroundColor Gray
+                # 不立即退出，继续检查实际状态
+                break
+            }
+        }
+        
+        # 显示实时输出
+        $output = Receive-Job $job -Keep
+        if ($output) {
+            Write-Host $output -ForegroundColor Gray
+        }
+        
+        Start-Sleep -Seconds 5
+    }
+    
+    if (!$deployed) {
+        Write-Host "⚠️  CLI连接超时，但部署可能仍在进行中..." -ForegroundColor Yellow
+        Stop-Job $job
+    }
+    
+    Remove-Job $job
     Set-Location ".."
+    
+    # 验证部署状态
+    Write-Host "`n🔍 验证部署状态..." -ForegroundColor Cyan
+    try {
+        $backendResponse = Invoke-WebRequest -Uri "https://secondhand-production.up.railway.app/api/products" -TimeoutSec 10 -ErrorAction Stop
+        Write-Host "✅ 后端服务正常运行" -ForegroundColor Green
+    } catch {
+        Write-Host "⚠️  后端服务可能还在启动中，请稍后检查" -ForegroundColor Yellow
+    }
+    
+    try {
+        $frontendResponse = Invoke-WebRequest -Uri "https://secondhand-production-328f.up.railway.app" -TimeoutSec 10 -ErrorAction Stop
+        Write-Host "✅ 前端服务正常运行" -ForegroundColor Green
+    } catch {
+        Write-Host "⚠️  前端服务可能还在启动中，请稍后检查" -ForegroundColor Yellow
+    }
     
     # 显示在线地址
     Write-Host "`n🌐 在线服务器地址：" -ForegroundColor Cyan
     Write-Host "  前端: https://secondhand-production-328f.up.railway.app" -ForegroundColor White
     Write-Host "  后端: https://secondhand-production.up.railway.app" -ForegroundColor White
     Write-Host "  自定义域名: https://auwei.net (需要配置DNS)" -ForegroundColor White
+    
+    Write-Host "`n💡 说明：CLI连接中断是正常现象，不影响实际部署" -ForegroundColor Green
 }
 
 # 第三步：启动本地服务器

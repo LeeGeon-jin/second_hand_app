@@ -1,29 +1,29 @@
 
 import React, { useState, useRef } from 'react';
-import { Form, Input, Button, message, Select, Space } from 'antd';
+import { Form, Input, Button, Toast, Selector, Space } from 'antd-mobile';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 const inputStyle: React.CSSProperties = {
-  height: 48,
-  fontSize: 22,
-  border: '3px solid #111',
-  borderRadius: 0,
-  marginBottom: 32,
+  height: 44,
+  fontSize: 16,
+  border: '1px solid #d9d9d9',
+  borderRadius: 6,
+  marginBottom: 16,
   paddingLeft: 12,
-  background: 'none',
+  background: '#fff',
 };
 const buttonStyle: React.CSSProperties = {
-  width: 180,
-  height: 60,
-  fontSize: 28,
-  borderRadius: 0,
-  margin: '40px auto 0',
+  width: '100%',
+  height: 44,
+  fontSize: 16,
+  borderRadius: 6,
+  margin: '24px auto 0',
   display: 'block',
   background: '#003cff',
   color: '#fff',
-  fontWeight: 600,
-  border: '3px solid #111',
+  fontWeight: 500,
+  border: 'none',
 };
 
 const Register: React.FC = () => {
@@ -75,7 +75,7 @@ const Register: React.FC = () => {
   // 禁止粘贴到重复密码框
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
-    message.warning('请手动输入重复密码');
+    Toast.show({ content: '请手动输入重复密码' });
   };
 
   // 注册提交
@@ -90,21 +90,20 @@ const Register: React.FC = () => {
           district: values.state
         } : undefined
       });
-      message.success('注册完成，请登录');
+      Toast.show({ content: '注册完成，请登录' });
       setTimeout(() => navigate('/login'), 1000);
     } catch (e: any) {
-      message.error(e?.response?.data?.message || '注册失败');
+      Toast.show({ content: e?.response?.data?.message || '注册失败' });
     }
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#fff' }}>
-      <h1 style={{ textAlign: 'center', marginTop: 60, marginBottom: 40, fontSize: 36 }}>新用户注册</h1>
+    <div style={{ minHeight: '100vh', background: '#fff', padding: '16px' }}>
+      <h1 style={{ textAlign: 'center', marginTop: 40, marginBottom: 24, fontSize: 24 }}>新用户注册</h1>
       <Form
         form={form}
-        style={{ maxWidth: 420, margin: '0 auto' }}
+        style={{ maxWidth: 320, margin: '0 auto' }}
         onFinish={onFinish}
-        autoComplete="off"
         layout="vertical"
       >
         <Form.Item
@@ -115,7 +114,7 @@ const Register: React.FC = () => {
           ]}
           validateTrigger="onBlur"
         >
-          <Input style={inputStyle} placeholder="用户名" size="large" autoComplete="off" disabled={checking} />
+          <Input style={inputStyle} placeholder="用户名" autoComplete="off" disabled={checking} />
         </Form.Item>
         <Form.Item
           name="password"
@@ -124,7 +123,7 @@ const Register: React.FC = () => {
             { min: 8, message: '密码至少输八位' },
           ]}
         >
-          <Input.Password style={inputStyle} placeholder="密码" size="large" autoComplete="new-password" />
+          <Input style={inputStyle} placeholder="密码" type="password" autoComplete="new-password" />
         </Form.Item>
         <Form.Item
           name="repeatPassword"
@@ -141,7 +140,7 @@ const Register: React.FC = () => {
             }),
           ]}
         >
-          <Input.Password style={inputStyle} placeholder="重复密码" size="large" autoComplete="new-password" onPaste={handlePaste} />
+          <Input style={inputStyle} placeholder="重复密码" type="password" autoComplete="new-password" onPaste={handlePaste} />
         </Form.Item>
         <Form.Item
           name="email"
@@ -150,38 +149,36 @@ const Register: React.FC = () => {
             { type: 'email', message: '请输入正确的电子邮箱格式' },
           ]}
         >
-          <Input style={inputStyle} placeholder="电子邮箱" size="large" autoComplete="off" />
+          <Input style={inputStyle} placeholder="电子邮箱" autoComplete="off" />
         </Form.Item>
         
         {/* 地址信息（可选） */}
-        <div style={{ marginBottom: 32 }}>
-          <div style={{ fontSize: 16, color: '#333', marginBottom: 16 }}>
+        <div style={{ marginBottom: 24 }}>
+          <div style={{ fontSize: 14, color: '#333', marginBottom: 12 }}>
             地址信息（可选）
-            <span style={{ fontSize: 14, color: '#666', marginLeft: 8 }}>
+            <span style={{ fontSize: 12, color: '#666', marginLeft: 6 }}>
               💡 用于商品发布时自动填充
             </span>
           </div>
           <Space direction="vertical" style={{ width: '100%' }}>
-            <Form.Item name="suburb" style={{ marginBottom: 16 }}>
+            <Form.Item name="suburb" style={{ marginBottom: 12 }}>
               <Input 
                 style={inputStyle} 
                 placeholder="所在城区（如：Bondi, Strathfield等）" 
-                size="large" 
               />
             </Form.Item>
-            <Form.Item name="state" style={{ marginBottom: 16 }}>
-              <Select
+            <Form.Item name="state" style={{ marginBottom: 12 }}>
+              <Selector
                 style={{ ...inputStyle, marginBottom: 0 }}
-                placeholder="选择州/领地"
                 options={stateOptions}
-                size="large"
+                columns={1}
               />
             </Form.Item>
           </Space>
         </div>
         
         <Form.Item>
-          <Button type="primary" htmlType="submit" block style={buttonStyle} disabled={checking}>
+          <Button type="submit" block style={buttonStyle} disabled={checking}>
             注册
           </Button>
         </Form.Item>

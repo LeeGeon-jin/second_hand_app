@@ -6,6 +6,7 @@ const UserSchema = new mongoose.Schema({
   passwordHash: String,
   email: String,
   phone: String,
+  avatar: String,
   location: {
     city: String,
     district: String,
@@ -14,7 +15,8 @@ const UserSchema = new mongoose.Schema({
   isVerified: Boolean,
   rating: Number,
   totalRatings: Number,
-  postedProducts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }]
+  postedProducts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
+  collectedProducts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }]
 });
 
 module.exports = mongoose.model('User', UserSchema);

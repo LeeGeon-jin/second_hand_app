@@ -15,6 +15,7 @@ const ProductSchema = new mongoose.Schema({
   seller: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   status: { type: String, enum: ['active', 'sold', 'inactive'], default: 'active' },
   visibleTo: { type: [String], default: ['all'] }, // ['all']或['user:<id>','admin']
+  collectCount: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now }
 });
 

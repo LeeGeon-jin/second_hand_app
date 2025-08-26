@@ -65,3 +65,4 @@ Write-Host "`n📝 注意事项：" -ForegroundColor Yellow
 Write-Host "  - Railway可能需要几分钟来完成部署" -ForegroundColor Gray
 Write-Host "  - 如果部署失败，请检查Railway控制台日志" -ForegroundColor Gray
 Write-Host "  - 确保环境变量已正确配置" -ForegroundColor Gray
+

@@ -1,0 +1,282 @@
+.image-viewer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* 顶部工具栏 */
+.iv-toolbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  z-index: 2001;
+}
+
+.iv-close-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border-radius: 50%;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.iv-close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.iv-counter {
+  color: white;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.iv-save-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border-radius: 50%;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.iv-save-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* 图片容器 */
+.iv-image-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.iv-image {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* 左右导航按钮 */
+.iv-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 50px;
+  height: 50px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border-radius: 50%;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  z-index: 2001;
+}
+
+.iv-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.iv-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.iv-nav-left {
+  left: 20px;
+}
+
+.iv-nav-right {
+  right: 20px;
+}
+
+/* 底部指示器 */
+.iv-indicators {
+  position: absolute;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 12px;
+  z-index: 2001;
+}
+
+.iv-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.iv-indicator:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.iv-indicator.active {
+  background: white;
+  transform: scale(1.2);
+}
+
+/* 操作提示 */
+.iv-hints {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 20px;
+  z-index: 2001;
+}
+
+.iv-hint {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .iv-toolbar {
+    height: 50px;
+    padding: 0 16px;
+  }
+
+  .iv-close-btn,
+  .iv-save-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+  }
+
+  .iv-counter {
+    font-size: 14px;
+  }
+
+  .iv-nav-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 20px;
+  }
+
+  .iv-nav-left {
+    left: 16px;
+  }
+
+  .iv-nav-right {
+    right: 16px;
+  }
+
+  .iv-indicators {
+    bottom: 60px;
+    gap: 10px;
+  }
+
+  .iv-indicator {
+    width: 10px;
+    height: 10px;
+  }
+
+  .iv-hints {
+    bottom: 16px;
+    gap: 16px;
+  }
+
+  .iv-hint {
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+}
+
+/* 触摸设备优化 */
+@media (hover: none) and (pointer: coarse) {
+  .iv-nav-btn {
+    width: 48px;
+    height: 48px;
+    font-size: 22px;
+  }
+
+  .iv-close-btn,
+  .iv-save-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.image-viewer-overlay {
+  animation: fadeIn 0.3s ease;
+}
+
+/* 图片加载动画 */
+.iv-image {
+  animation: fadeIn 0.2s ease;
+}
+
+/* 缩放时的光标样式 */
+.iv-image[style*="scale(2)"] {
+  cursor: grab !important;
+}
+
+.iv-image[style*="scale(2)"]:active {
+  cursor: grabbing !important;
+}
